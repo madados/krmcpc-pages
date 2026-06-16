@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KRMPC 管理后台</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--primary:#667eea;--primary-dark:#764ba2;--bg:#f5f5f5;--card-bg:#fff;--text:#333;--text-light:#888;--border:#e0e4ec;--radius:8px;--transition:.25s cubic-bezier(.4,0,.2,1);--font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#667eea,#764ba2)}
+.login-box{background:#fff;padding:40px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:360px;text-align:center}
+.login-box h1{font-size:24px;margin-bottom:8px}
+.login-box p{color:var(--text-light);margin-bottom:24px;font-size:14px}
+.login-box input{width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;margin-bottom:16px}
+.login-box input:focus{outline:none;border-color:var(--primary)}
+.login-box button{width:100%;padding:12px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer}
+.login-box button:hover{opacity:.9}
+.login-error{color:#e74c3c;font-size:13px;margin-bottom:12px;display:none}
+.admin-app{display:none}
+.admin-header{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:20px 30px;display:flex;justify-content:space-between;align-items:center}
+.admin-header h1{font-size:20px}
+.logout-btn{background:rgba(255,255,255,.2);color:#fff;border:none;padding:8px 20px;border-radius:20px;cursor:pointer;font-size:13px}
+.admin-main{max-width:1200px;margin:20px auto;padding:0 20px}
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);text-align:center}
+.stat-card .num{font-size:32px;font-weight:700;color:var(--primary)}
+.stat-card .label{font-size:13px;color:var(--text-light);margin-top:4px}
+.section{background:#fff;border-radius:12px;padding:24px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.section h2{font-size:18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
+.btn{padding:8px 20px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:var(--transition)}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-danger{background:#e74c3c;color:#fff}
+.btn-danger:hover{background:#c0392b}
+.btn-sm{padding:4px 12px;font-size:12px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--border);font-size:14px}
+th{background:#f8f9fa;font-weight:600;font-size:13px;color:var(--text-light)}
+tr:hover{background:#f8f9fb}
+.actions{display:flex;gap:8px}
+.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px}
+.form-group{display:flex;flex-direction:column}
+.form-group label{font-size:12px;color:var(--text-light);margin-bottom:4px;font-weight:500}
+.form-group input,.form-group select,.form-group textarea{padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary)}
+.form-group textarea{resize:vertical;min-height:60px}
+.form-actions{display:flex;gap:8px;margin-top:12px}
+.toast{position:fixed;top:20px;right:20px;padding:12px 24px;border-radius:8px;color:#fff;font-size:14px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+.toast-success{background:#27ae60}
+.toast-error{background:#e74c3c}
+.toast-warn{background:#f39c12}
+@media(max-width:768px){.stat-cards{grid-template-columns:repeat(2,1fr)}table{font-size:12px}th,td{padding:8px}.form-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <h1>🔐 管理后台</h1>
+    <p>KRMPC 口溶膜产品管理</p>
+    <div class="login-error" id="loginError">❌ 密码错误，请重试</div>
+    <input type="password" id="loginPwd" placeholder="请输入管理员密码" onkeydown="if(event.key==='Enter')doLogin()">
+    <button onclick="doLogin()">登 录</button>
+  </div>
+</div>
+<div class="admin-app" id="adminApp">
+  <div class="admin-header">
+    <h1>📋 KRMPC 管理后台</h1>
+    <div>
+      <button class="btn btn-primary" onclick="goHome()" style="margin-right:12px">🏠 查看首页</button>
+      <button class="logout-btn" onclick="doLogout()">退出登录</button>
+    </div>
+  </div>
+  <div class="admin-main">
+    <div class="stat-cards">
+      <div class="stat-card"><div class="num" id="statBrands">-</div><div class="label">品牌数</div></div>
+      <div class="stat-card"><div class="num" id="statProducts">-</div><div class="label">产品数</div></div>
+      <div class="stat-card"><div class="num" id="statImages">-</div><div class="label">图片数</div></div>
+      <div class="stat-card"><div class="num" id="statCats">-</div><div class="label">分类数</div></div>
+    </div>
+    <div class="section">
+      <h2>品牌管理 <button class="btn btn-primary" onclick="toggleForm('brandForm')">+ 添加品牌</button></h2>
+      <div id="brandForm" style="display:none;margin-bottom:20px;padding:16px;background:#f8f9fa;border-radius:8px">
+        <div class="form-row">
+          <div class="form-group"><label>品牌ID *</label><input id="b_brandId" placeholder="如Diso"></div>
+          <div class="form-group"><label>品牌名称 *</label><input id="b_name" placeholder="如Diso"></div>
+          <div class="form-group"><label>分类</label><select id="b_category"><option value="大健康">大健康</option><option value="宠物">宠物</option><option value="医药">医药</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>来源</label><input id="b_origin" placeholder="如英国"></div>
+          <div class="form-group"><label>图标</label><input id="b_icon" placeholder="如📦"></div>
+          <div class="form-group"><label>排序</label><input id="b_order" type="number" value="99"></div>
+        </div>
+        <div class="form-group"><label>品牌标语</label><textarea id="b_tagline" placeholder="品牌介绍..."></textarea></div>
+        <div class="form-row"><div class="form-group"><label>渐变色</label><input id="b_gradient" placeholder="linear-gradient(135deg,#667eea,#764ba2)"></div></div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="addBrand()">💾 保存品牌</button>
+          <button class="btn" onclick="toggleForm('brandForm')" style="background:#eee">取消</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto"><table id="brandTable"><thead><tr><th>ID</th><th>名称</th><th>分类</th><th>产品数</th><th>操作</th></tr></thead><tbody></tbody></table></div>
+    </div>
+    <div class="section">
+      <h2>产品管理 <button class="btn btn-primary" onclick="toggleForm('productForm')">+ 添加产品</button></h2>
+      <div id="productForm" style="display:none;margin-bottom:20px;padding:16px;background:#f8f9fa;border-radius:8px">
+        <div class="form-row">
+          <div class="form-group"><label>所属品牌 *</label><select id="p_brandId"></select></div>
+          <div class="form-group"><label>产品名称 *</label><input id="p_name" placeholder="产品名称"></div>
+          <div class="form-group"><label>副标题</label><input id="p_subtitle" placeholder="副标题"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>功效</label><input id="p_effects" placeholder="如能量支持"></div>
+          <div class="form-group"><label>规格</label><input id="p_specs" placeholder="如1盒30片"></div>
+          <div class="form-group"><label>排序</label><input id="p_order" type="number" value="99"></div>
+        </div>
+        <div class="form-group"><label>产品描述</label><textarea id="p_description" placeholder="详细产品描述..."></textarea></div>
+        <div class="form-group"><label>图片URL（每行一个）</label><textarea id="p_images" placeholder="https://xxx.cos.ap-guangzhou.myqcloud.com/images/xxx.jpg"></textarea></div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="addProduct()">💾 保存产品</button>
+          <button class="btn" onclick="toggleForm('productForm')" style="background:#eee">取消</button>
+        </div>
+      </div>
+      <div style="overflow-x:auto"><table id="productTable"><thead><tr><th>产品名称</th><th>品牌</th><th>功效</th><th>图片</th><th>操作</th></tr></thead><tbody></tbody></table></div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+var FUNC_URL = 'https://kourongmo-d3g3hjn7n3c76c396.tcloudbasegateway.com/functions/db-proxy';
+var ADMIN_PWD = '7080';
+var allBrands = [], allProducts = [];
+
+async function callDb(action, data) {
+  data = data || {};
+  data.action = action;
+  data.adminToken = ADMIN_PWD;
+  var res = await fetch(FUNC_URL, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+  var result = await res.json();
+  if (!result || !result.success) throw new Error(result ? result.error : '云函数调用失败');
+  return result.data !== undefined ? result.data : result;
+}
+
+function doLogin() {
+  var pwd = document.getElementById('loginPwd').value;
+  if (pwd === ADMIN_PWD) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminApp').style.display = 'block';
+    sessionStorage.setItem('admin_auth', '1');
+    loadAllData();
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+function doLogout() { sessionStorage.removeItem('admin_auth'); location.reload(); }
+function goHome() { location.href = 'index.html'; }
+
+if (sessionStorage.getItem('admin_auth') === '1') {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('adminApp').style.display = 'block';
+  loadAllData();
+}
+
+async function loadAllData() {
+  try {
+    var data = await callDb('loadAll');
+    allBrands = data.brands || [];
+    allProducts = data.products || [];
+    updateDashboard();
+    renderBrands();
+    renderProducts();
+    populateBrandSelect();
+  } catch(e) {
+    console.error('Load error:', e);
+    toast('❌ 数据加载失败: ' + e.message, 'error');
+  }
+}
+
+function updateDashboard() {
+  document.getElementById('statBrands').textContent = allBrands.length;
+  document.getElementById('statProducts').textContent = allProducts.length;
+  var totalImages = allProducts.reduce(function(sum, p) { return sum + (p.images ? p.images.length : 0); }, 0);
+  document.getElementById('statImages').textContent = totalImages;
+  var cats = [];
+  allBrands.forEach(function(b) { if (cats.indexOf(b.category) === -1) cats.push(b.category); });
+  document.getElementById('statCats').textContent = cats.length;
+}
+
+function renderBrands() {
+  var tbody = document.querySelector('#brandTable tbody');
+  tbody.innerHTML = allBrands.map(function(b) {
+    var count = allProducts.filter(function(p) { return p.brandId === b.brandId; }).length;
+    return '<tr><td><code>' + esc(b.brandId) + '</code></td><td>' + esc(b.name) + '</td><td>' + esc(b.category || '-') + '</td><td>' + count + '</td><td class="actions"><button class="btn btn-danger btn-sm" onclick="deleteBrand(\'' + b._id + '\',\'' + esc(b.name) + '\')">删除</button></td></tr>';
+  }).join('');
+}
+
+function renderProducts() {
+  var tbody = document.querySelector('#productTable tbody');
+  tbody.innerHTML = allProducts.map(function(p) {
+    var brand = allBrands.find(function(b) { return b.brandId === p.brandId; });
+    var imgCount = p.images ? p.images.length : 0;
+    return '<tr><td>' + esc(p.name) + '</td><td>' + (brand ? esc(brand.name) : p.brandId) + '</td><td>' + esc(p.effects || '-') + '</td><td>' + imgCount + '张</td><td class="actions"><button class="btn btn-danger btn-sm" onclick="deleteProduct(\'' + p._id + '\',\'' + esc(p.name) + '\')">删除</button></td></tr>';
+  }).join('');
+}
+
+function populateBrandSelect() {
+  var sel = document.getElementById('p_brandId');
+  sel.innerHTML = allBrands.map(function(b) { return '<option value="' + b.brandId + '">' + esc(b.name) + ' (' + b.category + ')</option>'; }).join('');
+}
+
+async function addBrand() {
+  var brandId = document.getElementById('b_brandId').value.trim();
+  var name = document.getElementById('b_name').value.trim();
+  if (!brandId || !name) { toast('⚠️ 请填写品牌ID和名称', 'warn'); return; }
+  var data = {
+    brandId: brandId, name: name,
+    icon: document.getElementById('b_icon').value.trim() || '📦',
+    origin: document.getElementById('b_origin').value.trim(),
+    category: document.getElementById('b_category').value,
+    tagline: document.getElementById('b_tagline').value.trim(),
+    gradient: document.getElementById('b_gradient').value.trim() || 'linear-gradient(135deg,#667eea,#764ba2)',
+    order: parseInt(document.getElementById('b_order').value) || 99,
+    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+  };
+  try {
+    await callDb('add', {collection:'brands', data:data});
+    toast('✅ 品牌添加成功', 'success');
+    toggleForm('brandForm');
+    clearBrandForm();
+    loadAllData();
+  } catch(e) { toast('❌ 添加失败: ' + e.message, 'error'); }
+}
+
+async function addProduct() {
+  var name = document.getElementById('p_name').value.trim();
+  if (!name) { toast('⚠️ 请填写产品名称', 'warn'); return; }
+  var imagesText = document.getElementById('p_images').value.trim();
+  var images = imagesText ? imagesText.split('\n').map(function(s){return s.trim();}).filter(Boolean) : [];
+  var data = {
+    brandId: document.getElementById('p_brandId').value,
+    name: name,
+    subtitle: document.getElementById('p_subtitle').value.trim(),
+    effects: document.getElementById('p_effects').value.trim(),
+    description: document.getElementById('p_description').value.trim(),
+    specs: document.getElementById('p_specs').value.trim(),
+    images: images,
+    order: parseInt(document.getElementById('p_order').value) || 99,
+    createdAt: new Date().toISOString(), updatedAt: new Date().toISOString()
+  };
+  try {
+    await callDb('add', {collection:'products', data:data});
+    toast('✅ 产品添加成功', 'success');
+    toggleForm('productForm');
+    clearProductForm();
+    loadAllData();
+  } catch(e) { toast('❌ 添加失败: ' + e.message, 'error'); }
+}
+
+async function deleteBrand(docId, name) {
+  if (!confirm('确定删除品牌 "' + name + '" 及其所有产品？此操作不可恢复！')) return;
+  try {
+    await callDb('delete', {collection:'brands', docId:docId});
+    var brand = allBrands.find(function(b) { return b._id === docId; });
+    if (brand) {
+      var prods = allProducts.filter(function(p) { return p.brandId === brand.brandId; });
+      for (var i = 0; i < prods.length; i++) {
+        await callDb('delete', {collection:'products', docId:prods[i]._id});
+      }
+    }
+    toast('✅ 品牌及关联产品已删除', 'success');
+    loadAllData();
+  } catch(e) { toast('❌ 删除失败: ' + e.message, 'error'); }
+}
+
+async function deleteProduct(docId, name) {
+  if (!confirm('确定删除产品 "' + name + '"？')) return;
+  try {
+    await callDb('delete', {collection:'products', docId:docId});
+    toast('✅ 产品已删除', 'success');
+    loadAllData();
+  } catch(e) { toast('❌ 删除失败: ' + e.message, 'error'); }
+}
+
+function esc(s) { return (s||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function toggleForm(id) { var el = document.getElementById(id); el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
+function clearBrandForm() { ['b_brandId','b_name','b_origin','b_icon','b_tagline','b_gradient','b_order'].forEach(function(id){document.getElementById(id).value='';}); }
+function clearProductForm() { ['p_name','p_subtitle','p_effects','p_specs','p_description','p_images','p_order'].forEach(function(id){document.getElementById(id).value='';}); }
+function toast(msg, type) { var el = document.getElementById('toast'); el.textContent = msg; el.className = 'toast toast-' + type + ' show'; setTimeout(function(){el.classList.remove('show');},3000); }
+</script>
+</body>
+</html>

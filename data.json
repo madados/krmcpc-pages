@@ -1,0 +1,416 @@
+{
+  "brands": [
+    {
+      "_id": "98d3bbc169fef73d01a4d76b0bb95d15",
+      "brandId": "Diso",
+      "name": "Diso",
+      "tagline": "Diso M‑Vit 口溶膜为希望摆脱吞咽片剂或胶囊的用户提供了便捷又快速吸收的维生素补充方式。其清爽的风味与无糖纯素配方受到注重健康与口感体验消费者的青睐，非常适合忙碌、追求高效补给营养的人群。",
+      "origin": "英国",
+      "icon": "🐾",
+      "gradient": "linear-gradient(135deg,#667eea,#764ba2)",
+      "category": "宠物",
+      "order": 1
+    },
+    {
+      "_id": "611e990a69fef73d019d72c8118da577",
+      "brandId": "WellbeingNutrition",
+      "name": "Wellbeing Nutrition",
+      "tagline": "轻松补充每日营养，无需吞咽大丸剂",
+      "origin": "US 美国",
+      "icon": "💤",
+      "gradient": "linear-gradient(135deg,#c066ea,#4a97a1)",
+      "category": "大健康",
+      "order": 2
+    },
+    {
+      "_id": "f81188ba69fef73d00c75c3651d33893",
+      "brandId": "NuStrips",
+      "name": "NuStrips",
+      "tagline": "NuStrips产品安全、清洁，富含人体所需的天然关键成分。",
+      "origin": "US美国",
+      "icon": "🐾",
+      "gradient": "linear-gradient(135deg,#ea6687,#4a97a1)",
+      "category": "大健康",
+      "order": 3
+    },
+    {
+      "_id": "399cd1a569fef73d019ceeca5545f394",
+      "brandId": "MaryRuthOrganics",
+      "name": "MaryRuth Organics",
+      "tagline": "无论在家还是外出，这些美味能量条都能帮助您提升能量代谢！只需撕下一条，放在舌头上，让它慢慢溶解即可",
+      "origin": "US 美国",
+      "icon": "🌾",
+      "gradient": "linear-gradient(135deg,#ea6666,#9ba14a)",
+      "category": "大健康",
+      "order": 4
+    },
+    {
+      "_id": "97b16bdb69fef73d01a150e234b03fff",
+      "brandId": "LoveWellness",
+      "name": "Love Wellness",
+      "tagline": "Love Wellness （乐健康能量速溶条）适合需要快速、平稳提神的人群。它以可溶性薄片形式提供温和、不焦虑的能量提升，不需水或药片，便于随身携带与即时使用。",
+      "origin": "",
+      "icon": "",
+      "gradient": "linear-gradient(135deg,#9aeef4,#de3421)",
+      "category": "大健康",
+      "order": 5
+    },
+    {
+      "_id": "148caf5069fef73d01a0df7369a36427",
+      "brandId": "Zenergy",
+      "name": "Zenergy",
+      "tagline": "能量提升",
+      "origin": "",
+      "icon": "",
+      "gradient": "linear-gradient(135deg,#f38cd7,#c4da52)",
+      "category": "宠物",
+      "order": 6
+    },
+    {
+      "_id": "a88c511869fef73e019a5e8e6c872301",
+      "brandId": "ARKOfSweden",
+      "name": "ARK Of Sweden",
+      "tagline": "专注力与能量支持",
+      "origin": "",
+      "icon": "",
+      "gradient": "linear-gradient(135deg,#f38cd7,#c4da52)",
+      "category": "大健康",
+      "order": 7
+    },
+    {
+      "_id": "9756e76169fef73e019ace3119daf95f",
+      "brandId": "Calmour",
+      "name": "Calmour",
+      "tagline": "Calmour：速溶维生素条 | 天然能量补充和助眠剂",
+      "origin": "",
+      "icon": "",
+      "gradient": "linear-gradient(135deg,#3aa9ee,#ee17a9)",
+      "category": "大健康",
+      "order": 8
+    }
+  ],
+  "products": [
+    {
+      "_id": "a88c511869fef73e019a5e99405379de",
+      "brandId": "Diso",
+      "name": "Diso Energy Oral Strips",
+      "subtitle": "Diso Energy",
+      "effects": "能量支持型口溶膜，含咖啡因等成分",
+      "description": "Diso Energy 草莓口味速溶能量条方便随身携带，适合忙碌生活中快速补充咖啡因与维生素B族以恢复精力。它能在口中迅速溶解，比传统胶囊或饮料更轻便且无负担，带来即时提神效果。",
+      "specs": "1盒30片，草莓味  尺寸： 6.4 x 5.7 x 2.2 厘米，0.06 千克",
+      "images": [
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_086.jpg",
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_086.jpg"
+      ],
+      "order": 1,
+      "createdAt": "2026-05-09T08:58:38.333Z",
+      "updatedAt": "2026-05-09T08:58:38.333Z"
+    },
+    {
+      "_id": "98d3bbc169fef73e01a4d7836e8fd78b",
+      "brandId": "Diso",
+      "name": "Diso M‑Vit Oral Strips",
+      "subtitle": "Diso M‑Vit",
+      "effects": "补充复合维生素",
+      "description": "Diso M‑Vit 蔓越莓口溶条为希望摆脱吞咽片剂或胶囊的用户提供了便捷又快速吸收的维生素补充方式。其清爽的蔓越莓风味与无糖纯素配方受到注重健康与口感体验消费者的青睐，非常适合忙碌、追求高效补给营养的人群。",
+      "specs": "一盒30片，蓝莓味  尺寸: 6.4 x 5.7 x 2.2 厘米, 0.06 公斤",
+      "images": [
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_087.webp",
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_088.webp"
+      ],
+      "order": 2,
+      "createdAt": "2026-05-09T08:58:38.462Z",
+      "updatedAt": "2026-05-09T08:58:38.462Z"
+    },
+    {
+      "_id": "399cd1a569fef73e019ceed82d543d96",
+      "brandId": "Diso",
+      "name": "Diso Snooze Oral Strips",
+      "subtitle": "Diso Snoonze",
+      "effects": "睡眠辅助型条剂。",
+      "description": "Diso Snooze樱桃味口含条以快速溶解的形式提供便捷的助眠支持，适合不想服用药片或携带补充剂的人群。用户普遍称其|有助于放松和改善睡眠质量，而不会产生次日的倦怠感。",
+      "specs": "11盒30片，樱桃味尺寸:6.4x5.7x2.2厘米，0.06千克",
+      "images": [],
+      "order": 3,
+      "createdAt": "2026-05-09T08:58:38.573Z",
+      "updatedAt": "2026-05-09T08:58:38.573Z"
+    },
+    {
+      "_id": "613a534569fef73e01a2e93d4dec382f",
+      "brandId": "WellbeingNutrition",
+      "name": "Wellbeing Nutrition Melts Multivitamin",
+      "subtitle": "Wellbeing Nutrition",
+      "effects": "多种维生素口溶膜，日常基础营养补充",
+      "description": "Wellbeing Nutrition Melts Into Multivitamins 口溶片适合忙碌的现代人群，它通过口腔快速吸收的方式补充多种维生素，无需吞咽胶囊。消费者喜欢它的便携性和天然成分，尤其适合经常出差或难以服药的人群。",
+      "specs": "一盒30片 芒果味",
+      "images": [
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_089.webp",
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_090.webp"
+      ],
+      "order": 1,
+      "createdAt": "2026-05-09T08:58:38.677Z",
+      "updatedAt": "2026-05-09T08:58:38.677Z"
+    },
+    {
+      "_id": "f81188ba69fef73e00c75c460a0bdc4f",
+      "brandId": "WellbeingNutrition",
+      "name": "Wellbeing Nutrition Melts Instant Energy",
+      "subtitle": "Wellbeing Nutrition",
+      "effects": "快速能量支持口溶条",
+      "description": "Wellbeing Nutrition Melts Instant Energy（口含能量条）采用植物基、纯素配方，含天然咖啡因与B族维生素，可迅速补充电解质并恢复活力。其纳米吸收技术使营养更易吸收，适合忙碌工作者或运动前后快速补能。",
+      "specs": "一盒30片，葡萄柚口味",
+      "images": [
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_091.webp",
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_092.webp",
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_093.webp"
+      ],
+      "order": 2,
+      "createdAt": "2026-05-09T08:58:38.782Z",
+      "updatedAt": "2026-05-09T08:58:38.782Z"
+    },
+    {
+      "_id": "9cd783ff69fef73e01a3d60f6e5e6fc7",
+      "brandId": "WellbeingNutrition",
+      "name": "Wellbeing Nutrition Melts Restful Sleep",
+      "subtitle": "Wellbeing Nutrition",
+      "effects": "Wellbeing Nutrition 舒缓睡眠贴片 | 植物基褪黑素 10 毫克，含洋甘菊、塔加拉提取物和 L-茶氨酸，助您改善睡眠、缓解压力",
+      "description": "Wellbeing Nutrition Melts Restful Sleep 30 采用植物基褪黑素、洋甘菊和缬草根配方，以快速溶解的口含薄片形式帮助入睡并改善睡眠质量。用户普遍反映它能让人更快入睡、减少夜间醒来，醒来时感觉精神焕发，无明显副作用。",
+      "specs": "一盒30片，褪黑素",
+      "images": [
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_096.jpg",
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_096.jpg",
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_096.jpg"
+      ],
+      "order": 3,
+      "createdAt": "2026-05-09T08:58:38.879Z",
+      "updatedAt": "2026-05-09T08:58:38.879Z"
+    },
+    {
+      "_id": "611e990a69fef73f019d72da29187791",
+      "brandId": "NuStrips",
+      "name": "NuStrips Energy In A Strip",
+      "subtitle": "NuStrips Energy",
+      "effects": "高能量支持；含咖啡因",
+      "description": "NuStrips Energy In A Strip（肉桂香草味）是一种无糖、速溶的能量补充片，能在几分钟内提供4–6小时的清洁能量，非常适合需要随时提神又不想摄入能量饮料的人群。它便携易用，不会造成能量崩溃或心悸，适合忙碌上班族、旅行者或健身前后补能使用。",
+      "specs": "一盒30片，肉桂香草味",
+      "images": [
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_097.webp",
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_098.webp",
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_099.webp"
+      ],
+      "order": 1,
+      "createdAt": "2026-05-09T08:58:38.978Z",
+      "updatedAt": "2026-05-09T08:58:38.978Z"
+    },
+    {
+      "_id": "f81188ba69fef73f00c75c4a0dcdcd75",
+      "brandId": "NuStrips",
+      "name": "NuStrips Sleep In A Strip",
+      "subtitle": "NuStrips",
+      "effects": "睡眠支持型薄膜条，蓝莓味。",
+      "description": "NuStrips Sleep In A Strip（梦幻蓝莓味）采用可迅速在舌上溶解的配方，使褪黑素吸收更快，帮助使用者在数分钟内自然入睡，无需吞咽药片。它结合缬草根与L-茶氨酸，用户普遍反馈醒后无“宿醉感”，适合想改善睡眠质量、追求便捷无副作用助眠方案的人群。",
+      "specs": "一盒30片，蓝莓味",
+      "images": [
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_100.webp",
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_101.webp",
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_102.webp"
+      ],
+      "order": 2,
+      "createdAt": "2026-05-09T08:58:39.081Z",
+      "updatedAt": "2026-05-09T08:58:39.081Z"
+    },
+    {
+      "_id": "611e990a69fef73f019d72dc78b7b411",
+      "brandId": "NuStrips",
+      "name": "NuStrips BEAUTY IN A STRIP™",
+      "subtitle": "NuStrips",
+      "effects": "天然美容成分，如生物素、叶酸和维生素E，可促进头发生长，强健指甲，由内而外焕发光彩",
+      "description": "一种由内而外获得美容效果的天然方法。无需用水、药丸或任何不健康的成分。从发根滋养秀发，令秀发更浓密、更健康，快速见效。富含人体可吸收的必需营养素，强健脆弱指甲。促进细胞更新，改善肌肤透明度，令肌肤焕发自然清新光彩，并减少粉刺。只使用人体能够识别的纯天然成分。不含任何填充剂和添加剂，只有显著效果。",
+      "specs": "一盒30片，甜草莓味",
+      "images": [
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_103.webp",
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_104.webp",
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_105.webp"
+      ],
+      "order": 3,
+      "createdAt": "2026-05-09T08:58:39.199Z",
+      "updatedAt": "2026-05-09T08:58:39.199Z"
+    },
+    {
+      "_id": "f81188ba69fef73f00c75c4d4c3f524e",
+      "brandId": "MaryRuthOrganics",
+      "name": "MaryRuth's Energy Dissolving Strips",
+      "subtitle": "MaryRuth",
+      "effects": "随时补充能量、避免咖啡引起紧张感",
+      "description": "这款 MaryRuth’s 能量溶解条（草莓味）非常适合需要随时补充能量、避免咖啡引起紧张感的人群。其快速溶解、便携易用的形式，使其成为忙碌上班族或出行者的便利选择，同时含有维生素B族与天然提取物，有助于维持日常活力与专注力。",
+      "specs": "一盒30片，草莓味",
+      "images": [
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_106.webp",
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_107.webp",
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_108.webp"
+      ],
+      "order": 1,
+      "createdAt": "2026-05-09T08:58:39.298Z",
+      "updatedAt": "2026-05-09T08:58:39.298Z"
+    },
+    {
+      "_id": "eb87832669fef73f019fad9b36f11271",
+      "brandId": "MaryRuthOrganics",
+      "name": "Sleep Dissolving Strips",
+      "subtitle": "MaryRuth's",
+      "effects": "睡眠溶解贴",
+      "description": "只需撕开一片，放在舌头上，让它溶解即可！您将收到一罐30片蔓越莓口味的速溶片，方便您在家或外出时服用，帮助缓解偶尔的失眠。",
+      "specs": "一盒30片每份含有维生素 B6、Suntheanine®（L-茶氨酸）、缬草根提取物、洋甘菊花提取物和褪黑素。",
+      "images": [
+        "https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_086.jpg"
+      ],
+      "order": 2,
+      "createdAt": "2026-05-09T08:58:39.405Z",
+      "updatedAt": "2026-05-09T08:58:39.405Z"
+    },
+    {
+      "_id": "611e990a69fef73f019d72df0ea70357",
+      "brandId": "LoveWellness",
+      "name": "Love Wellness Energy Quick Melt Strips",
+      "subtitle": "ENERGY* Quick Melt Strips",
+      "effects": "提升动力和精力",
+      "description": "Love Wellness Energy Quick Melt Strips（乐健康能量速溶条）适合需要快速、平稳提神的人群。它以可溶性薄片形式提供温和、不焦虑的能量提升，不需水或药片，便于随身携带与即时使用。",
+      "specs": "2 包，每包 15 条莓果口味",
+      "images": [],
+      "order": 1,
+      "createdAt": "2026-05-09T08:58:39.514Z",
+      "updatedAt": "2026-05-09T08:58:39.514Z"
+    },
+    {
+      "_id": "e35392d069fef73f01a315bc2c8c332b",
+      "brandId": "LoveWellness",
+      "name": "Love Wellness Sleep Quick Melt Strips",
+      "subtitle": "Sleep* Quick Melt Strips",
+      "effects": "入口即化，有助于放松身心，缓解偶发性失眠",
+      "description": "Love Wellness 的 Sleep Quick Melt Strips（助眠快速溶解条）适合偶发性失眠者，主打“无需用水、入口即化”的快速吸收体验。许多用户反映它能帮助他们更快入睡并提升睡眠质量，非常适合希望用天然方式放松入眠的人",
+      "specs": "睡眠支撑贴* • 1 包，每包 15 片 蔓越莓口味",
+      "images": [],
+      "order": 2,
+      "createdAt": "2026-05-09T08:58:39.620Z",
+      "updatedAt": "2026-05-09T08:58:39.620Z"
+    },
+    {
+      "_id": "9cd783ff69fef73f01a3d61647a670da",
+      "brandId": "LoveWellness",
+      "name": "Love Wellness BLOAT* Quick Melt Strips",
+      "subtitle": "BLOAT* Quick Melt Strips",
+      "effects": "蕴含舒缓植物成分，入口即化，有助于缓解餐后不适。",
+      "description": "快速溶解的草本薄荷味条，有助于餐后消化舒适*\n有助于缓解偶发性腹胀和饱胀感*\n帮助健康的消化系统高效运作速溶条提供高浓度活性成分，可在正常消化过程中轻松释放。它快速溶解，不含糖分，方便您随时随地补充营养。",
+      "specs": "消化支持膜 • 2 包，每包 15 条草本薄荷味",
+      "images": [],
+      "order": 3,
+      "createdAt": "2026-05-09T08:58:39.720Z",
+      "updatedAt": "2026-05-09T08:58:39.720Z"
+    },
+    {
+      "_id": "d967c8d469fef73f019c359722332435",
+      "brandId": "LoveWellness",
+      "name": "Love Wellness CRAVINGS* Quick Melt Strips",
+      "subtitle": "CRAVINGS* Quick Melt Strips",
+      "effects": "入口即化，有助于养成健康的饮食习惯",
+      "description": "快速溶解，天然浆果口味，助力健康饮食习惯*\n帮助您保持均衡的饮食习惯*\n支持营养吸收和代谢*速溶条提供高浓度活性成分，可在正常消化过程中轻松释放。它快速溶解，不含糖分，方便您随时随地补充营养。*",
+      "specs": "健康饮食辅助膜 • 2 包，每包 15 条 混合莓果口味",
+      "images": [],
+      "order": 4,
+      "createdAt": "2026-05-09T08:58:39.839Z",
+      "updatedAt": "2026-05-09T08:58:39.839Z"
+    },
+    {
+      "_id": "f81188ba69fef74000c75cd307426905",
+      "brandId": "LoveWellness",
+      "name": "Love Wellness CALM* Quick Melt Strips",
+      "subtitle": "CALM* Quick Melt Strips",
+      "effects": "入口即化，有助于缓解日常压力，促进平静感",
+      "description": "快速溶解的柠檬味舒缓片，有助于缓解日常压力感*\n旨在帮助您在旅途中保持平静*\n促进平衡与放松*速溶条提供高浓度活性成分，可在正常消化过程中轻松释放。它快速溶解，不含糖分，方便您随时随地补充营养。",
+      "specs": "情绪调节膜 2 包，每包 15 片 柠檬味",
+      "images": [],
+      "order": 5,
+      "createdAt": "2026-05-09T08:58:39.962Z",
+      "updatedAt": "2026-05-09T08:58:39.962Z"
+    },
+    {
+      "_id": "9cd783ff69fef74001a3d61b05666bea",
+      "brandId": "LoveWellness",
+      "name": "Love Wellness URINARY TRACT* Quick Melt Strips",
+      "subtitle": "URINARY TRACT* Quick Melt Strips",
+      "effects": "入口即化的膜，有助于维护泌尿系统和膀胱健康。",
+      "description": "快速溶解、天然蔓越莓口味的泌尿系统支持产品*\n有助于维持膀胱正常健康*\n有助于清洁和保护泌尿道*速溶条提供高浓度活性成分，可在正常消化过程中轻松释放。它快速溶解，不含糖分，方便您随时随地补充营养。*",
+      "specs": "泌尿道支撑膜  • 2 包，每包 15 条 蔓越莓口味",
+      "images": [],
+      "order": 6,
+      "createdAt": "2026-05-09T08:58:40.070Z",
+      "updatedAt": "2026-05-09T08:58:40.070Z"
+    },
+    {
+      "_id": "611e990a69fef740019d72ee7cbc2399",
+      "brandId": "Zenergy",
+      "name": "Zenergy Energy Oral Strips",
+      "subtitle": "Energy Oral Strips",
+      "effects": "我们的天然薄片入口即化，瞬间释放能量，不会引起紧张不安。蕴含植物萃取咖啡因，并添加茶氨酸和B族维生素，营养均衡。",
+      "description": "ZENERGY能量口含薄荷片（ZENERGY Energy Oral Strips Mint Flavor）为忙碌或经常外出的用户提供即溶型提神方案，每片含咖啡因和L-茶氨酸，数分钟内即可感受清爽提神的能量。薄荷口味清新，且便于携带使用，不需水即可补充精力",
+      "specs": "40 毫克咖啡因 + 30 毫克 L-茶氨酸 + 100% 维生素 B6 和 B12 | 0 糖、0 卡路里、0 麸质、0 阿斯巴甜、纯素食、植物性、即时作用 | 1 盒 30 条",
+      "images": [],
+      "order": 1,
+      "createdAt": "2026-05-09T08:58:40.176Z",
+      "updatedAt": "2026-05-09T08:58:40.176Z"
+    },
+    {
+      "_id": "ae0498ca69fef740019fa0fa328bbc5d",
+      "brandId": "ARKOfSweden",
+      "name": "ARK Melts Strips Focus &amp; Instant Energy",
+      "subtitle": "Strips Focus &amp; Instant Energy",
+      "effects": "快速起效的能量   更清晰的焦点，无抖动   无糖，零卡路里",
+      "description": "ARK Melts Strips Focus Energy 口含能量薄片以便携、快速溶解著称，提供即时能量与注意力提升，非常适合需要快速集中精神或提神的用户。消费者普遍称赞其天然咖啡因带来的“清爽提神”效果，没有传统能量饮品的紧张感或疲乏反应。",
+      "specs": "一盒30片，每片都含有纯净、无副作用的天然咖啡因、L-茶氨酸和生物利用度高的维生素 B12 混合物",
+      "images": [],
+      "order": 1,
+      "createdAt": "2026-05-09T08:58:40.299Z",
+      "updatedAt": "2026-05-09T08:58:40.299Z"
+    },
+    {
+      "_id": "948392db69fef740019f4e1a3ff522c2",
+      "brandId": "Calmour",
+      "name": "Calmour Sleep Melatonin Strips",
+      "subtitle": "Sleep Melatonin Strips",
+      "effects": "睡眠辅助褪黑素薄片。",
+      "description": "Calmour 的 Sleep Melatonin Strips 是一款便携、速溶的助眠补充产品，适合需要快速入睡或不想吞咽药片的人。用户称赞它能帮助改善睡眠质量、在旅途中也方便使用，并且口感清新、无糖，适合日常和出差时使用。",
+      "specs": "Calmour褪黑素口服助眠贴一盒10片，每片含3毫克褪黑素。 口味：香草",
+      "images": [],
+      "order": 1,
+      "createdAt": "2026-05-09T08:58:40.402Z",
+      "updatedAt": "2026-05-09T08:58:40.402Z"
+    },
+    {
+      "_id": "ee33190469fef74001a17a8c13fecede",
+      "brandId": "Calmour",
+      "name": "Calmour Digestive Comfort Anti-Gas Strips",
+      "subtitle": "Digestive Comfort Anti-Gas Strips",
+      "effects": "Calmour 抗胀气贴温和地帮助消化，从而促进消化舒适，减少胀气不适。",
+      "description": "能快速有效地缓解胀气和腹胀。只需将其放在舌头上，即可迅速溶解。口感宜人\n缓解胀气症状，如打嗝、腹胀、胃肠压迫感/不适感。\n肠胃胀气、功能性胃胀气和术后胀气疼痛",
+      "specs": "一盒10片Calmour 抗胀气片（西甲硅油）每片含 62.5 毫克 薄荷味",
+      "images": [],
+      "order": 2,
+      "createdAt": "2026-05-09T08:58:40.510Z",
+      "updatedAt": "2026-05-09T08:58:40.510Z"
+    },
+    {
+      "_id": "148caf5069fef74001a0df9533e03618",
+      "brandId": "Calmour",
+      "name": "Calmour Children’s Acetaminophen",
+      "subtitle": "Children’s Acetaminophen",
+      "effects": "供强效止痛和退烧功效",
+      "description": "Calmour 儿童对乙酰氨基酚贴片为 2-9 岁儿童提供强效止痛和退烧功效。这些易于使用的贴片可快速缓解感冒和流感症状、鼻窦压力、头痛和轻微疼痛。缓解疼痛、发烧、头痛和感冒症状，舒缓喉咙痛，减轻身体疼痛，并有助于缓解鼻窦不适。\n缓解疼痛、退烧、头痛、感冒、咽喉痛、身体疼痛和鼻窦炎。",
+      "specs": "一盒24片儿童对乙酰氨基酚（止痛退烧药），每片含对乙酰氨基酚 80 毫克。 口味：橙子",
+      "images": [],
+      "order": 3,
+      "createdAt": "2026-05-09T08:58:40.594Z",
+      "updatedAt": "2026-05-09T08:58:40.594Z"
+    }
+  ],
+  "updateTime": "2026-05-09T11:11:29.716Z"
+}

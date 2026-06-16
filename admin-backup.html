@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KRMPC 管理后台</title>
+<script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/1.7.1/cloudbase.full.js"></script>
+<style>
+/* ===== GLOBAL RESET & BASE ===== */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --primary:#667eea;
+  --primary-dark:#764ba2;
+  --danger:#e74c3c;
+  --success:#27ae60;
+  --bg:#f0f2f5;
+  --card:#fff;
+  --text:#333;
+  --text-light:#888;
+  --border:#e0e4ec;
+  --radius:10px;
+  --shadow:0 2px 12px rgba(0,0,0,.06);
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
+a{color:var(--primary)}
+input,textarea,select{
+  font-family:inherit;font-size:14px;padding:8px 12px;
+  border:1.5px solid var(--border);border-radius:8px;
+  outline:none;transition:.2s;width:100%;
+}
+input:focus,textarea:focus,select:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(102,126,234,.15)}
+textarea{resize:vertical;min-height:60px}
+button{cursor:pointer;font-family:inherit}
+
+/* ===== LOGIN SCREEN ===== */
+.login-screen{
+  display:flex;align-items:center;justify-content:center;
+  min-height:100vh;background:linear-gradient(135deg,#667eea,#764ba2);
+}
+.login-box{
+  background:#fff;border-radius:16px;padding:40px;
+  width:90%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,.2);
+  text-align:center;
+}
+.login-box h2{font-size:22px;margin-bottom:8px}
+.login-box p{color:var(--text-light);font-size:13px;margin-bottom:24px}
+.login-box input{margin-bottom:16px;text-align:center;font-size:18px;letter-spacing:4px}
+.login-box .btn{width:100%;padding:12px}
+.login-error{color:var(--danger);font-size:13px;margin-top:8px;display:none}
+
+/* ===== ADMIN LAYOUT ===== */
+.admin-app{display:none;min-height:100vh}
+.admin-header{
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  color:#fff;padding:16px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.admin-header h1{font-size:18px;font-weight:700}
+.admin-header .actions{display:flex;gap:8px}
+.admin-header .btn-back{
+  padding:6px 16px;border-radius:20px;
+  border:1.5px solid rgba(255,255,255,.4);
+  background:rgba(255,255,255,.1);color:#fff;
+  font-size:13px;font-weight:500;cursor:pointer;transition:.2s;
+}
+.admin-header .btn-back:hover{background:rgba(255,255,255,.25)}
+.btn-logout{
+  padding:6px 16px;border-radius:20px;
+  border:1.5px solid rgba(255,255,255,.4);
+  background:rgba(255,255,255,.1);color:#fff;
+  font-size:13px;font-weight:500;cursor:pointer;transition:.2s;
+}
+.btn-logout:hover{background:rgba(255,255,255,.25)}
+
+/* ===== TABS ===== */
+.admin-tabs{
+  display:flex;gap:0;background:#fff;border-bottom:2px solid var(--border);
+  position:sticky;top:0;z-index:50;
+}
+.admin-tab{
+  flex:1;padding:14px 0;text-align:center;font-size:14px;font-weight:600;
+  color:var(--text-light);border:none;background:none;cursor:pointer;
+  border-bottom:3px solid transparent;margin-bottom:-2px;transition:.2s;
+}
+.admin-tab:hover{color:var(--primary)}
+.admin-tab.active{color:var(--primary);border-bottom-color:var(--primary)}
+
+/* ===== PANELS ===== */
+.admin-content{max-width:1000px;margin:0 auto;padding:24px}
+.panel{display:none}
+.panel.active{display:block}
+
+/* ===== STATS ROW ===== */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{
+  background:#fff;border-radius:var(--radius);padding:20px;
+  box-shadow:var(--shadow);text-align:center;
+}
+.stat-card .num{font-size:28px;font-weight:800;color:var(--primary)}
+.stat-card .label{font-size:12px;color:var(--text-light);margin-top:4px}
+
+/* ===== ITEM LIST ===== */
+.item-list{display:flex;flex-direction:column;gap:12px}
+.item-card{
+  background:#fff;border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden;
+  border:1.5px solid transparent;transition:.2s;
+}
+.item-card:hover{border-color:var(--primary)}
+.item-card-header{
+  display:flex;align-items:center;gap:12px;
+  padding:16px 20px;cursor:pointer;
+}
+.item-card-header .icon{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.item-card-header .info{flex:1;min-width:0}
+.item-card-header .info h3{font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item-card-header .info p{font-size:12px;color:var(--text-light);margin-top:2px}
+.item-card-header .chevron{
+  font-size:18px;color:var(--text-light);transition:.2s;
+}
+.item-card.open .chevron{transform:rotate(180deg)}
+.item-card-body{
+  display:none;padding:0 20px 20px;
+  border-top:1px solid var(--border);
+}
+.item-card.open .item-card-body{display:block}
+
+/* ===== FORM ===== */
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;color:#555}
+.form-group .hint{font-size:11px;color:var(--text-light);margin-top:4px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:10px 20px;border-radius:8px;font-size:13px;font-weight:600;
+  border:none;cursor:pointer;transition:.2s;
+}
+.btn-primary{background:var(--primary);color:#fff}
+.btn-primary:hover{background:var(--primary-dark)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{background:#c0392b}
+.btn-success{background:var(--success);color:#fff}
+.btn-success:hover{background:#219a52}
+.btn-outline{background:#fff;color:var(--primary);border:1.5px solid var(--primary)}
+.btn-outline:hover{background:var(--primary);color:#fff}
+.btn-sm{padding:6px 14px;font-size:12px}
+.btn-block{width:100%;justify-content:center}
+
+/* ===== IMAGES LIST ===== */
+.images-list{display:flex;flex-direction:column;gap:8px}
+.image-row{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;background:#f8f9fb;border-radius:8px;
+}
+.image-row img{width:48px;height:48px;object-fit:cover;border-radius:6px;background:#eee}
+.image-row .url{flex:1;font-size:12px;color:var(--text-light);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.image-row .btn-sm{flex-shrink:0}
+
+/* ===== TOAST ===== */
+.toast{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);
+  background:#333;color:#fff;padding:12px 24px;border-radius:10px;
+  font-size:14px;z-index:999;transition:.3s;opacity:0;
+}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:640px){
+  .admin-content{padding:16px}
+  .form-row{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <h2>🔐 管理后台</h2>
+    <p>请输入管理密码以进入</p>
+    <input type="password" id="loginPwd" placeholder="请输入密码" maxlength="20"
+           onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn btn-primary" onclick="doLogin()">登 录</button>
+    <div class="login-error" id="loginError">密码错误，请重试</div>
+  </div>
+</div>
+
+<!-- ===== ADMIN APP ===== -->
+<div class="admin-app" id="adminApp">
+  <!-- Header -->
+  <header class="admin-header">
+    <h1>⚙️ KRMPC 管理后台</h1>
+    <div class="actions">
+      <button class="btn-back" onclick="location.href='index.html'">← 返回展示</button>
+      <button class="btn-logout" onclick="doLogout()">退出</button>
+    </div>
+  </header>
+
+  <!-- Tabs -->
+  <div class="admin-tabs">
+    <button class="admin-tab active" data-panel="dashboard">📊 概览</button>
+    <button class="admin-tab" data-panel="brands">🏷️ 品牌</button>
+    <button class="admin-tab" data-panel="products">📦 产品</button>
+    <button class="admin-tab" data-panel="images">🖼️ 图库</button>
+  </div>
+
+  <div class="admin-content">
+
+    <!-- ===== DASHBOARD PANEL ===== -->
+    <div class="panel active" id="panel-dashboard">
+      <div class="stats">
+        <div class="stat-card">
+          <div class="num" id="statBrands">0</div>
+          <div class="label">品牌总数</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="statProducts">0</div>
+          <div class="label">产品总数</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="statImages">0</div>
+          <div class="label">图片总数</div>
+        </div>
+        <div class="stat-card">
+          <div class="num" id="statCats">0</div>
+          <div class="label">分类数</div>
+        </div>
+      </div>
+      <div style="background:#fff;border-radius:10px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.06)">
+        <h3 style="font-size:16px;margin-bottom:16px">使用说明</h3>
+        <ul style="font-size:13px;line-height:2;color:#666;padding-left:20px">
+          <li>在「品牌」标签下管理品牌信息（名称、描述、图标等）</li>
+          <li>在「产品」标签下管理产品信息（名称、描述、图片等）</li>
+          <li>在「图库」标签下统一管理所有产品图片（COS URL）</li>
+          <li>所有修改实时保存到云端，展示页立即生效</li>
+          <li>产品图片使用腾讯云COS链接，格式：<code>https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/xxx.jpg</code></li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- ===== BRANDS PANEL ===== -->
+    <div class="panel" id="panel-brands">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <h2 style="font-size:18px">品牌管理</h2>
+        <button class="btn btn-primary" onclick="showAddBrandForm()">+ 添加品牌</button>
+      </div>
+
+      <!-- Add Brand Form (hidden by default) -->
+      <div id="addBrandForm" style="display:none;background:#fff;border-radius:10px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:20px;border:2px solid var(--primary)">
+        <h3 style="font-size:15px;margin-bottom:16px">添加新品牌</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>品牌ID（英文，用于URL）</label>
+            <input id="newBrandId" placeholder="例：MyBrand">
+          </div>
+          <div class="form-group">
+            <label>品牌名称</label>
+            <input id="newBrandName" placeholder="例：我的品牌">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>品牌图标（Emoji）</label>
+            <input id="newBrandIcon" placeholder="例：🐾" maxlength="4">
+          </div>
+          <div class="form-group">
+            <label>产地</label>
+            <input id="newBrandOrigin" placeholder="例：美国">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>分类</label>
+            <select id="newBrandCategory">
+              <option value="宠物">宠物</option>
+              <option value="大健康" selected>大健康</option>
+              <option value="医药">医药</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>排序序号</label>
+            <input id="newBrandOrder" type="number" value="99" min="1">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>品牌描述</label>
+          <textarea id="newBrandTagline" placeholder="一句话介绍品牌"></textarea>
+        </div>
+        <div class="form-group">
+          <label>渐变背景色</label>
+          <input id="newBrandGradient" placeholder="例：linear-gradient(135deg,#667eea,#764ba2)">
+          <div class="hint">CSS linear-gradient 格式</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="addBrand()">保存品牌</button>
+          <button class="btn btn-outline" onclick="hideAddBrandForm()">取消</button>
+        </div>
+      </div>
+
+      <div class="item-list" id="brandList">
+        <div class="loading" style="text-align:center;padding:40px;color:#888">加载中...</div>
+      </div>
+    </div>
+
+    <!-- ===== PRODUCTS PANEL ===== -->
+    <div class="panel" id="panel-products">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <h2 style="font-size:18px">产品管理</h2>
+        <button class="btn btn-primary" onclick="showAddProductForm()">+ 添加产品</button>
+      </div>
+
+      <!-- Add Product Form -->
+      <div id="addProductForm" style="display:none;background:#fff;border-radius:10px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:20px;border:2px solid var(--primary)">
+        <h3 style="font-size:15px;margin-bottom:16px">添加新产品</h3>
+        <div class="form-row">
+          <div class="form-group">
+            <label>所属品牌</label>
+            <select id="newProductBrand"></select>
+          </div>
+          <div class="form-group">
+            <label>排序序号</label>
+            <input id="newProductOrder" type="number" value="99" min="1">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>产品名称</label>
+          <input id="newProductName" placeholder="例：Diso Energy Oral Strips">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>副标题</label>
+            <input id="newProductSubtitle" placeholder="例：Diso Energy">
+          </div>
+          <div class="form-group">
+            <label>功效标签</label>
+            <input id="newProductEffects" placeholder="例：能量支持型口溶膜">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>产品描述</label>
+          <textarea id="newProductDesc" placeholder="详细描述产品特点和优势"></textarea>
+        </div>
+        <div class="form-group">
+          <label>规格信息</label>
+          <input id="newProductSpecs" placeholder="例：1盒30片，草莓味">
+        </div>
+        <div class="form-group">
+          <label>图片URL（COS链接）</label>
+          <textarea id="newProductImages" placeholder="每行一个URL，例：&#10;https://krm-1410044926.cos.ap-guangzhou.myqcloud.com/images/img_001.jpg"></textarea>
+          <div class="hint">每行一个图片URL</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="addProduct()">保存产品</button>
+          <button class="btn btn-outline" onclick="hideAddProductForm()">取消</button>
+        </div>
+      </div>
+
+      <div class="item-list" id="productList">
+        <div class="loading" style="text-align:center;padding:40px;color:#888">加载中...</div>
+      </div>
+    </div>
+
+    <!-- ===== IMAGES PANEL ===== -->
+    <div class="panel" id="panel-images">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+        <h2 style="font-size:18px">图库管理</h2>
+        <button class="btn btn-primary" onclick="showAddImageForm()">+ 批量添加图片</button>
+      </div>
+
+      <!-- Batch Add Images -->
+      <div id="addImageForm" style="display:none;background:#fff;border-radius:10px;padding:24px;box-shadow:0 2px 12px rgba(0,0,0,.06);margin-bottom:20px;border:2px solid var(--primary)">
+        <h3 style="font-size:15px;margin-bottom:16px">批量添加图片URL到产品</h3>
+        <div class="form-group">
+          <label>选择产品</label>
+          <select id="imgProductSelect"></select>
+        </div>
+        <div class="form-group">
+          <label>图片URL列表</label>
+          <textarea id="imgUrlsInput" rows="6" placeholder="每行一个图片URL"></textarea>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" onclick="batchAddImages()">保存图片</button>
+          <button class="btn btn-outline" onclick="hideAddImageForm()">取消</button>
+        </div>
+      </div>
+
+      <div id="imageList">
+        <div class="loading" style="text-align:center;padding:40px;color:#888">加载中...</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+// ===== Config =====
+const ENV_ID = 'kourongmo-d3g3hjn7n3c76c396';
+const ADMIN_PWD = '7080';
+let app, db, auth;
+let allBrands = [], allProducts = [];
+
+// ===== CloudBase Init =====
+async function initCloud() {
+  try {
+    app = cloudbase.init({ env: ENV_ID });
+    auth = app.auth();
+    db = app.database();
+    
+    // 匿名登录
+    console.log('🔐 尝试匿名登录...');
+    await auth.signInAnonymously();
+    const loginState = await auth.getLoginState();
+    console.log('✅ 匿名登录成功，用户ID:', loginState?.uid || 'unknown');
+    
+    return true;
+  } catch(e) {
+    console.error('CloudBase init error:', e);
+    toast('❌ 云服务初始化失败: ' + e.message);
+    return false;
+  }
+}
+
+// ===== Login =====
+async function doLogin() {
+  const pwd = document.getElementById('loginPwd').value;
+  if (pwd === ADMIN_PWD) {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminApp').style.display = 'block';
+    sessionStorage.setItem('admin_auth', '1');
+    
+    const cloudReady = await initCloud();
+    if (cloudReady) {
+      loadAllData();
+    } else {
+      toast('❌ 云服务连接失败，请检查网络');
+    }
+  } else {
+    document.getElementById('loginError').style.display = 'block';
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('admin_auth');
+  location.reload();
+}
+
+// Check if already logged in
+(async function() {
+  if (sessionStorage.getItem('admin_auth') === '1') {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminApp').style.display = 'block';
+    const cloudReady = await initCloud();
+    if (cloudReady) {
+      loadAllData();
+    } else {
+      toast('❌ 云服务连接失败');
+    }
+  }
+})();
+
+// ===== Tab Switching =====
+document.querySelectorAll('.admin-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.panel).classList.add('active');
+  });
+});
+
+// ===== Data Loading =====
+async function loadAllData() {
+  try {
+    const brandRes = await db.collection('brands').orderBy('order', 'asc').get();
+    allBrands = brandRes.data || [];
+    const prodRes = await db.collection('products').orderBy('order', 'asc').get();
+    allProducts = prodRes.data || [];
+    updateDashboard();
+    renderBrands();
+    renderProducts();
+    renderImages();
+  } catch(e) {
+    console.error('Load error:', e);
+    toast('❌ 数据加载失败');
+  }
+}
+
+function updateDashboard() {
+  document.getElementById('statBrands').textContent = allBrands.length;
+  document.getElementById('statProducts').textContent = allProducts.length;
+  const totalImages = allProducts.reduce((sum, p) => sum + (p.images ? p.images.length : 0), 0);
+  document.getElementById('statImages').textContent = totalImages;
+  const cats = [...new Set(allBrands.map(b => b.category))];
+  document.getElementById('statCats').textContent = cats.length;
+}
+
+// ===== Brand Management =====
+function showAddBrandForm() {
+  document.getElementById('addBrandForm').style.display = 'block';
+  document.getElementById('newBrandId').focus();
+}
+function hideAddBrandForm() {
+  document.getElementById('addBrandForm').style.display = 'none';
+  ['newBrandId','newBrandName','newBrandIcon','newBrandOrigin','newBrandTagline','newBrandGradient'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+}
+
+async function addBrand() {
+  const brandId = document.getElementById('newBrandId').value.trim();
+  const name = document.getElementById('newBrandName').value.trim();
+  if (!brandId || !name) { toast('⚠️ 请填写品牌ID和名称'); return; }
+
+  const data = {
+    brandId,
+    name,
+    icon: document.getElementById('newBrandIcon').value.trim() || '📦',
+    origin: document.getElementById('newBrandOrigin').value.trim(),
+    category: document.getElementById('newBrandCategory').value,
+    tagline: document.getElementById('newBrandTagline').value.trim(),
+    gradient: document.getElementById('newBrandGradient').value.trim() || 'linear-gradient(135deg,#667eea,#764ba2)',
+    order: parseInt(document.getElementById('newBrandOrder').value) || 99
+  };
+
+  try {
+    await db.collection('brands').add(data);
+    toast('✅ 品牌添加成功');
+    hideAddBrandForm();
+    loadAllData();
+  } catch(e) {
+    console.error('Add brand error:', e);
+    toast('❌ 添加失败: ' + (e.message || '未知错误'));
+  }
+}
+
+async function updateBrand(docId, field, value) {
+  try {
+    await db.collection('brands').doc(docId).update({ [field]: value });
+    toast('✅ 已保存');
+    loadAllData();
+  } catch(e) {
+    toast('❌ 保存失败');
+  }
+}
+
+async function deleteBrand(docId, brandId) {
+  if (!confirm(`确定删除品牌 "${brandId}"？此操作不可恢复！`)) return;
+  try {
+    await db.collection('brands').doc(docId).remove();
+    // Also delete products under this brand
+    const prods = allProducts.filter(p => p.brandId === brandId);
+    for (const p of prods) {
+      await db.collection('products').doc(p._id).remove();
+    }
+    toast('✅ 品牌及关联产品已删除');
+    loadAllData();
+  } catch(e) {
+    toast('❌ 删除失败');
+  }
+}
+
+function renderBrands() {
+  const list = document.getElementById('brandList');
+  if (allBrands.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:#888">暂无品牌，点击上方按钮添加</div>';
+    return;
+  }
+  list.innerHTML = allBrands.map(b => `
+    <div class="item-card" id="brand-${b._id}">
+      <div class="item-card-header" onclick="toggleCard('brand-${b._id}')">
+        <div class="icon" style="background:${b.gradient || '#eee'};color:#fff">${b.icon || '📦'}</div>
+        <div class="info">
+          <h3>${esc(b.name)}</h3>
+          <p>${esc(b.origin || '')} · ${esc(b.category || '')} · ${b.brandId}</p>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="item-card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>品牌名称</label>
+            <input value="${esc(b.name)}" onchange="updateBrand('${b._id}','name',this.value)">
+          </div>
+          <div class="form-group">
+            <label>品牌ID</label>
+            <input value="${esc(b.brandId)}" disabled style="opacity:.6">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>图标（Emoji）</label>
+            <input value="${esc(b.icon || '')}" onchange="updateBrand('${b._id}','icon',this.value)">
+          </div>
+          <div class="form-group">
+            <label>产地</label>
+            <input value="${esc(b.origin || '')}" onchange="updateBrand('${b._id}','origin',this.value)">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>分类</label>
+            <select onchange="updateBrand('${b._id}','category',this.value)">
+              <option value="宠物" ${b.category==='宠物'?'selected':''}>宠物</option>
+              <option value="大健康" ${b.category==='大健康'?'selected':''}>大健康</option>
+              <option value="医药" ${b.category==='医药'?'selected':''}>医药</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>排序</label>
+            <input type="number" value="${b.order || 99}" onchange="updateBrand('${b._id}','order',parseInt(this.value))">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>品牌描述</label>
+          <textarea onchange="updateBrand('${b._id}','tagline',this.value)">${esc(b.tagline || '')}</textarea>
+        </div>
+        <div class="form-group">
+          <label>渐变背景</label>
+          <input value="${esc(b.gradient || '')}" onchange="updateBrand('${b._id}','gradient',this.value)">
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteBrand('${b._id}','${esc(b.brandId)}')">🗑️ 删除品牌</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ===== Product Management =====
+function showAddProductForm() {
+  document.getElementById('addProductForm').style.display = 'block';
+  // Populate brand select
+  const sel = document.getElementById('newProductBrand');
+  sel.innerHTML = allBrands.map(b => `<option value="${b.brandId}">${b.name} (${b.brandId})</option>`).join('');
+  document.getElementById('newProductName').focus();
+}
+function hideAddProductForm() {
+  document.getElementById('addProductForm').style.display = 'none';
+  ['newProductName','newProductSubtitle','newProductEffects','newProductDesc','newProductSpecs','newProductImages'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+}
+
+async function addProduct() {
+  const name = document.getElementById('newProductName').value.trim();
+  if (!name) { toast('⚠️ 请填写产品名称'); return; }
+
+  const imagesText = document.getElementById('newProductImages').value.trim();
+  const images = imagesText ? imagesText.split('\n').map(s => s.trim()).filter(s => s) : [];
+
+  const data = {
+    brandId: document.getElementById('newProductBrand').value,
+    name,
+    subtitle: document.getElementById('newProductSubtitle').value.trim(),
+    effects: document.getElementById('newProductEffects').value.trim(),
+    description: document.getElementById('newProductDesc').value.trim(),
+    specs: document.getElementById('newProductSpecs').value.trim(),
+    images,
+    order: parseInt(document.getElementById('newProductOrder').value) || 99
+  };
+
+  try {
+    await db.collection('products').add(data);
+    toast('✅ 产品添加成功');
+    hideAddProductForm();
+    loadAllData();
+  } catch(e) {
+    toast('❌ 添加失败: ' + (e.message || '未知错误'));
+  }
+}
+
+async function updateProduct(docId, field, value) {
+  try {
+    await db.collection('products').doc(docId).update({ [field]: value });
+    toast('✅ 已保存');
+    loadAllData();
+  } catch(e) {
+    toast('❌ 保存失败');
+  }
+}
+
+async function deleteProduct(docId) {
+  if (!confirm('确定删除此产品？')) return;
+  try {
+    await db.collection('products').doc(docId).remove();
+    toast('✅ 产品已删除');
+    loadAllData();
+  } catch(e) {
+    toast('❌ 删除失败');
+  }
+}
+
+async function removeProductImage(docId, imgIndex) {
+  const prod = allProducts.find(p => p._id === docId);
+  if (!prod || !prod.images) return;
+  const newImages = [...prod.images];
+  newImages.splice(imgIndex, 1);
+  try {
+    await db.collection('products').doc(docId).update({ images: newImages });
+    toast('✅ 图片已删除');
+    loadAllData();
+  } catch(e) {
+    toast('❌ 删除失败');
+  }
+}
+
+function renderProducts() {
+  const list = document.getElementById('productList');
+  if (allProducts.length === 0) {
+    list.innerHTML = '<div style="text-align:center;padding:40px;color:#888">暂无产品</div>';
+    return;
+  }
+  list.innerHTML = allProducts.map(p => {
+    const brand = allBrands.find(b => b.brandId === p.brandId);
+    const imgCount = (p.images || []).length;
+    return `
+    <div class="item-card" id="prod-${p._id}">
+      <div class="item-card-header" onclick="toggleCard('prod-${p._id}')">
+        <div class="icon" style="background:${brand ? brand.gradient : '#eee'};color:#fff;font-size:14px">
+          ${imgCount > 0 ? '🖼️' : '📦'}
+        </div>
+        <div class="info">
+          <h3>${esc(p.name)}</h3>
+          <p>${esc(p.brandId || '')} · ${imgCount}张图片 · ${esc(p.effects || '')}</p>
+        </div>
+        <span class="chevron">▼</span>
+      </div>
+      <div class="item-card-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label>产品名称</label>
+            <input value="${esc(p.name)}" onchange="updateProduct('${p._id}','name',this.value)">
+          </div>
+          <div class="form-group">
+            <label>所属品牌</label>
+            <select onchange="updateProduct('${p._id}','brandId',this.value)">
+              ${allBrands.map(b => `<option value="${b.brandId}" ${p.brandId===b.brandId?'selected':''}>${b.name}</option>`).join('')}
+            </select>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>副标题</label>
+            <input value="${esc(p.subtitle || '')}" onchange="updateProduct('${p._id}','subtitle',this.value)">
+          </div>
+          <div class="form-group">
+            <label>功效标签</label>
+            <input value="${esc(p.effects || '')}" onchange="updateProduct('${p._id}','effects',this.value)">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>产品描述</label>
+          <textarea onchange="updateProduct('${p._id}','description',this.value)">${esc(p.description || '')}</textarea>
+        </div>
+        <div class="form-group">
+          <label>规格信息</label>
+          <input value="${esc(p.specs || '')}" onchange="updateProduct('${p._id}','specs',this.value)">
+        </div>
+        <div class="form-group">
+          <label>排序</label>
+          <input type="number" value="${p.order || 99}" onchange="updateProduct('${p._id}','order',parseInt(this.value))">
+        </div>
+        <div class="form-group">
+          <label>产品图片 (${imgCount}张)</label>
+          <div class="images-list">
+            ${(p.images || []).map((img, i) => `
+              <div class="image-row">
+                <img src="${esc(img)}" onerror="this.style.background='#fdd'">
+                <span class="url">${esc(img)}</span>
+                <button class="btn btn-danger btn-sm" onclick="removeProductImage('${p._id}',${i})">删除</button>
+              </div>
+            `).join('')}
+            ${imgCount === 0 ? '<div style="color:#aaa;font-size:13px;padding:8px">暂无图片，在图库标签下可批量添加</div>' : ''}
+          </div>
+        </div>
+        <div class="form-group">
+          <label>添加图片URL</label>
+          <div style="display:flex;gap:8px">
+            <input id="addImg-${p._id}" placeholder="粘贴COS图片URL" style="flex:1">
+            <button class="btn btn-success btn-sm" onclick="addImageToProduct('${p._id}')">添加</button>
+          </div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p._id}')">🗑️ 删除产品</button>
+      </div>
+    </div>
+  `}).join('');
+}
+
+async function addImageToProduct(docId) {
+  const input = document.getElementById('addImg-' + docId);
+  const url = input.value.trim();
+  if (!url) { toast('⚠️ 请输入图片URL'); return; }
+
+  const prod = allProducts.find(p => p._id === docId);
+  const newImages = [...(prod.images || []), url];
+  try {
+    await db.collection('products').doc(docId).update({ images: newImages });
+    toast('✅ 图片已添加');
+    input.value = '';
+    loadAllData();
+  } catch(e) {
+    toast('❌ 添加失败');
+  }
+}
+
+// ===== Image Management =====
+function showAddImageForm() {
+  document.getElementById('addImageForm').style.display = 'block';
+  const sel = document.getElementById('imgProductSelect');
+  sel.innerHTML = allProducts.map(p => `<option value="${p._id}">${p.name} (${p.brandId})</option>`).join('');
+}
+function hideAddImageForm() {
+  document.getElementById('addImageForm').style.display = 'none';
+  document.getElementById('imgUrlsInput').value = '';
+}
+
+async function batchAddImages() {
+  const docId = document.getElementById('imgProductSelect').value;
+  const urls = document.getElementById('imgUrlsInput').value.trim().split('\n').map(s => s.trim()).filter(s => s);
+  if (!docId || urls.length === 0) { toast('⚠️ 请选择产品并输入URL'); return; }
+
+  const prod = allProducts.find(p => p._id === docId);
+  const newImages = [...(prod.images || []), ...urls];
+  try {
+    await db.collection('products').doc(docId).update({ images: newImages });
+    toast(`✅ 已添加 ${urls.length} 张图片`);
+    hideAddImageForm();
+    loadAllData();
+  } catch(e) {
+    toast('❌ 添加失败');
+  }
+}
+
+function renderImages() {
+  const list = document.getElementById('imageList');
+  let html = '';
+  for (const p of allProducts) {
+    if (!p.images || p.images.length === 0) continue;
+    html += `<div style="margin-bottom:24px">
+      <h4 style="font-size:14px;margin-bottom:8px;color:#555">${esc(p.name)} <span style="color:#aaa">(${p.images.length}张)</span></h4>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px">
+        ${p.images.map((img, i) => `
+          <div style="position:relative;border-radius:8px;overflow:hidden;aspect-ratio:1;background:#f0f0f0">
+            <img src="${esc(img)}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.style.background='#fee'">
+            <button onclick="removeProductImage('${p._id}',${i})"
+                    style="position:absolute;top:4px;right:4px;background:rgba(231,76,60,.9);color:#fff;border:none;border-radius:50%;width:24px;height:24px;font-size:14px;cursor:pointer;line-height:1">×</button>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+  }
+  list.innerHTML = html || '<div style="text-align:center;padding:40px;color:#888">暂无图片</div>';
+}
+
+// ===== Helpers =====
+function toggleCard(id) {
+  document.getElementById(id).classList.toggle('open');
+}
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 2500);
+}
+</script>
+</body>
+</html>

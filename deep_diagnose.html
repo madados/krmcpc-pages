@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CloudBase 深度诊断工具</title>
+<script src="https://imgcache.qq.com/qcloud/cloudbase-js-sdk/1.7.1/cloudbase.full.js"></script>
+<style>
+body{font-family:system-ui,sans-serif;padding:20px;background:#f5f5f5}
+.test-panel{background:#fff;padding:20px;border-radius:8px;margin:20px 0;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+h1{color:#667eea;margin-bottom:20px}
+h2{color:#333;font-size:18px;margin-top:20px}
+.status{margin:10px 0;padding:10px;background:#f0f0f0;border-radius:4px;font-family:monospace;font-size:13px}
+.success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+.error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+.btn{padding:10px 20px;background:#667eea;color:#fff;border:none;border-radius:4px;cursor:pointer;margin:5px;font-size:14px}
+.btn:hover{background:#764ba2}
+.log{background:#000;color:#0f0;padding:15px;border-radius:4px;height:300px;overflow-y:scroll;font-family:monospace;font-size:12px;margin-top:10px}
+.step{margin:15px 0;padding:15px;border:1px solid #ddd;border-radius:6px}
+.step-num{background:#667eea;color:#fff;width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;margin-right:8px}
+</style>
+</head>
+<body>
+
+<h1>🔍 CloudBase 深度诊断工具</h1>
+<p>环境ID：<code>kourongmo-d3g3hjn7n3c76c396</code></p>
+
+<div class="test-panel">
+  <div class="step">
+    <span class="step-num">1</span>
+    <strong>基础信息检查</strong>
+    <button class="btn" onclick="checkBasicInfo()">检查基础配置</button>
+    <div id="basicInfo" class="status">等待检查...</div>
+  </div>
+  
+  <div class="step">
+    <span class="step-num">2</span>
+    <strong>SDK版本检测</strong>
+    <button class="btn" onclick="checkSDKVersion()">检查SDK版本</button>
+    <div id="sdkVersion" class="status">等待检查...</div>
+  </div>
+  
+  <div class="step">
+    <span class="step-num">3</span>
+    <strong>匿名登录测试</strong>
+    <p>CloudBase可能需要用户登录才能读取数据</p>
+    <button class="btn" onclick="testAnonymousLogin()">测试匿名登录</button>
+    <div id="loginStatus" class="status">等待检查...</div>
+  </div>
+  
+  <div class="step">
+    <span class="step-num">4</span>
+    <strong>数据库连接测试</strong>
+    <button class="btn" onclick="testDatabaseConnection()">测试数据库连接</button>
+    <div id="dbStatus" class="status">等待检查...</div>
+  </div>
+  
+  <div class="step">
+    <span class="step-num">5</span>
+    <strong>完整流程测试</strong>
+    <button class="btn" onclick="fullTest()">执行完整测试流程</button>
+    <div id="fullStatus" class="status">等待检查...</div>
+  </div>
+</div>
+
+<div class="test-panel">
+  <h2>📋 详细日志</h2>
+  <button class="btn" onclick="clearLog()">清空日志</button>
+  <div id="log" class="log"></div>
+</div>
+
+<div class="test-panel">
+  <h2>🔧 可能的解决方案</h2>
+  <div id="solutions" style="display:none">
+    <h3>根据诊断结果，尝试以下解决方案：</h3>
+    <div id="solutionList"></div>
+  </div>
+</div>
+
+<script>
+let app, db;
+
+function log(msg) {
+  const logEl = document.getElementById('log');
+  const time = new Date().toLocaleTimeString();
+  logEl.innerHTML += `[${time}] ${msg}\n`;
+  logEl.scrollTop = logEl.scrollHeight;
+  console.log(msg);
+}
+
+function clearLog() {
+  document.getElementById('log').innerHTML = '';
+}
+
+function setStatus(id, success, message) {
+  const el = document.getElementById(id);
+  el.className = 'status ' + (success ? 'success' : 'error');
+  el.innerHTML = (success ? '✅ ' : '❌ ') + message;
+}
+
+function showSolutions() {
+  document.getElementById('solutions').style.display = 'block';
+}
+
+// 基础信息检查
+async function checkBasicInfo() {
+  log('\n=== 基础信息检查 ===');
+  
+  try {
+    // 检查window对象
+    log('检查window.cloudbase: ' + (typeof window.cloudbase));
+    log('检查window.cloudbase.init: ' + (typeof window.cloudbase.init));
+    
+    // 检查环境ID
+    const ENV_ID = 'kourongmo-d3g3hjn7n3c76c396';
+    log('环境ID: ' + ENV_ID);
+    
+    // 检查浏览器信息
+    log('浏览器: ' + navigator.userAgent);
+    log('协议: ' + window.location.protocol);
+    log('主机: ' + window.location.host);
+    
+    setStatus('basicInfo', true, '基础信息检查完成');
+    log('✅ 基础信息检查完成');
+    
+  } catch(e) {
+    setStatus('basicInfo', false, '检查失败: ' + e.message);
+    log('❌ 基础信息检查失败: ' + e.message);
+  }
+}
+
+// SDK版本检测
+async function checkSDKVersion() {
+  log('\n=== SDK版本检测 ===');
+  
+  try {
+    if (typeof cloudbase === 'undefined') {
+      throw new Error('cloudbase SDK未加载');
+    }
+    
+    log('cloudbase对象存在: ' + (typeof cloudbase));
+    log('cloudbase.init: ' + (typeof cloudbase.init));
+    
+    // 尝试获取版本信息
+    try {
+      const version = cloudbase.version || '未知';
+      log('SDK版本: ' + version);
+    } catch(e) {
+      log('无法获取SDK版本: ' + e.message);
+    }
+    
+    // 检查SDK方法
+    const methods = ['init', 'auth', 'database', 'storage', 'functions'];
+    methods.forEach(method => {
+      log('cloudbase.' + method + ': ' + (typeof cloudbase[method]));
+    });
+    
+    setStatus('sdkVersion', true, 'SDK版本检测完成');
+    log('✅ SDK版本检测完成');
+    
+  } catch(e) {
+    setStatus('sdkVersion', false, '检测失败: ' + e.message);
+    log('❌ SDK版本检测失败: ' + e.message);
+    showSolutions();
+  }
+}
+
+// 匿名登录测试
+async function testAnonymousLogin() {
+  log('\n=== 匿名登录测试 ===');
+  
+  try {
+    if (!app) {
+      app = cloudbase.init({ env: 'kourongmo-d3g3hjn7n3c76c396' });
+      log('CloudBase初始化成功');
+    }
+    
+    log('尝试匿名登录...');
+    const auth = app.auth();
+    
+    try {
+      await auth.signInAnonymously();
+      log('✅ 匿名登录成功');
+      
+      // 获取登录状态
+      const loginState = await auth.getLoginState();
+      log('登录状态: ' + (loginState ? '已登录' : '未登录'));
+      if (loginState) {
+        log('用户类型: ' + loginState.userType);
+        log('用户ID: ' + loginState.uid);
+      }
+      
+      setStatus('loginStatus', true, '匿名登录成功');
+    } catch(e) {
+      log('❌ 匿名登录失败: ' + e.message);
+      log('错误代码: ' + (e.code || '未知'));
+      log('完整错误: ' + JSON.stringify(e));
+      setStatus('loginStatus', false, '登录失败: ' + e.message);
+      
+      // 可能是环境未启用匿名登录
+      if (e.message && e.message.includes('anonymous')) {
+        log('💡 提示：可能需要在CloudBase控制台启用匿名登录');
+        log('   路径：环境设置 -> 登录方式 -> 匿名登录');
+      }
+    }
+    
+  } catch(e) {
+    log('❌ 登录测试失败: ' + e.message);
+    setStatus('loginStatus', false, '测试失败: ' + e.message);
+  }
+}
+
+// 数据库连接测试
+async function testDatabaseConnection() {
+  log('\n=== 数据库连接测试 ===');
+  
+  try {
+    if (!app) {
+      app = cloudbase.init({ env: 'kourongmo-d3g3hjn7n3c76c396' });
+      log('CloudBase初始化成功');
+    }
+    
+    if (!db) {
+      db = app.database();
+      log('数据库对象创建成功');
+    }
+    
+    log('尝试查询brands集合...');
+    log('使用方法: db.collection("brands").limit(1).get()');
+    
+    const res = await db.collection('brands').limit(1).get();
+    log('✅ 查询成功！');
+    log('返回数据: ' + JSON.stringify(res.data));
+    
+    setStatus('dbStatus', true, '数据库连接成功，找到 ' + res.data.length + ' 条数据');
+    
+  } catch(e) {
+    log('❌ 数据库连接失败');
+    log('错误类型: ' + e.constructor.name);
+    log('错误消息: ' + e.message);
+    log('错误代码: ' + (e.code || '未知'));
+    log('完整错误: ' + JSON.stringify(e, null, 2));
+    
+    setStatus('dbStatus', false, '连接失败: ' + e.message);
+    showSolutions();
+    
+    // 分析错误原因
+    if (e.message && e.message.includes('network')) {
+      log('\n💡 诊断：网络请求错误');
+      log('可能原因：');
+      log('1. 安全规则未正确配置');
+      log('2. 网络被防火墙阻止');
+      log('3. 需要用户登录认证');
+      log('4. 环境未启用数据库服务');
+    }
+    
+    if (e.message && e.message.includes('permission')) {
+      log('\n💡 诊断：权限错误');
+      log('请确认安全规则配置正确：{"read": true}');
+    }
+  }
+}
+
+// 完整测试流程
+async function fullTest() {
+  log('\n=== 执行完整测试流程 ===');
+  
+  try {
+    // 步骤1：初始化
+    log('步骤1：初始化CloudBase...');
+    app = cloudbase.init({ env: 'kourongmo-d3g3hjn7n3c76c396' });
+    db = app.database();
+    log('✅ 初始化成功');
+    
+    // 步骤2：尝试匿名登录
+    log('\n步骤2：尝试匿名登录...');
+    try {
+      const auth = app.auth();
+      await auth.signInAnonymously();
+      log('✅ 匿名登录成功');
+    } catch(e) {
+      log('⚠️  匿名登录失败，继续测试...');
+    }
+    
+    // 步骤3：测试数据库查询
+    log('\n步骤3：测试数据库查询...');
+    const res = await db.collection('brands').limit(1).get();
+    log('✅ 查询成功！找到 ' + res.data.length + ' 条数据');
+    
+    // 步骤4：测试完整数据加载
+    log('\n步骤4：测试完整数据加载...');
+    const brandRes = await db.collection('brands').get();
+    const prodRes = await db.collection('products').get();
+    
+    log('✅ 数据加载完成！');
+    log('   品牌数：' + brandRes.data.length);
+    log('   产品数：' + prodRes.data.length);
+    
+    setStatus('fullStatus', true, '完整测试成功！品牌: ' + brandRes.data.length + ', 产品: ' + prodRes.data.length);
+    
+    log('\n🎉 所有测试通过！');
+    log('如果首页仍然显示空白，请检查：');
+    log('1. 清除浏览器缓存（Ctrl+Shift+R）');
+    log('2. 检查index.html是否正确引用了cloudbase.full.js');
+    log('3. 检查index.html的初始化代码是否正确');
+    
+  } catch(e) {
+    log('\n❌ 完整测试失败');
+    log('错误：' + e.message);
+    setStatus('fullStatus', false, '测试失败: ' + e.message);
+    showSolutions();
+  }
+}
+
+// 页面加载时自动执行
+window.onload = function() {
+  log('页面加载完成');
+  log('CloudBase SDK 版本: ' + (cloudbase.version || '未知'));
+  log('环境ID: kourongmo-d3g3hjn7n3c76c396');
+  log('准备开始诊断...');
+};
+</script>
+
+</body>
+</html>
