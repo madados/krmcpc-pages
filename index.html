@@ -841,6 +841,7 @@ body.edit-mode #addBrandFab{display:flex}
 .wx-guide-overlay .wx-close-btn{margin-top:32px;padding:12px 36px;border:1px solid rgba(255,255,255,.3);border-radius:25px;background:transparent;color:#fff;font-size:15px;cursor:pointer}
 .wx-guide-overlay .wx-close-btn:hover{background:rgba(255,255,255,.1)}
 </style>
+<script src="//imgcache.qq.com/qcloud/tcbjs/1.10.10/tcb.js"></script>
 </head>
 <body class="" style="">
 
@@ -2330,7 +2331,30 @@ function filterBrand(id, btn) {
 }
 
 // ===== AUTH & EDIT MODE =====
-const AUTH_API = 'https://kourongmo-d3g3hjn7n3c76c396.tcloudbasegateway.com/functions/db-proxy';
+// CloudBase SDK 直连云函数（免 HTTP 网关，免费版可用）
+const ENV_ID = 'kourongmo-d3g3hjn7n3c76c396';
+let CB_APP = null;
+const CB_READY = (async function() {
+  try {
+    CB_APP = tcb.init({ env: ENV_ID });
+    const auth = CB_APP.auth({ persistence: 'local' });
+    if (!auth.hasLoginState()) {
+      await auth.anonymousAuthProvider().signIn();
+    }
+    return true;
+  } catch (e) {
+    console.error('CloudBase init failed:', e);
+    return false;
+  }
+})();
+
+async function callDbFunction(data) {
+  if (!CB_APP) { await CB_READY; }
+  if (!CB_APP) { throw new Error('CloudBase 未初始化，请刷新页面重试'); }
+  const res = await CB_APP.callFunction({ name: 'db-proxy', data });
+  return res.result;
+}
+
 const TOKEN_KEY = 'krmcpc_admin_token';
 
 function getAuthToken() { return sessionStorage.getItem(TOKEN_KEY) || ''; }
@@ -2362,12 +2386,7 @@ async function doAuth() {
   }
 
   try {
-    const res = await fetch(AUTH_API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'auth', password: pwd })
-    });
-    const result = await res.json();
+    const result = await callDbFunction({ action: 'auth', password: pwd });
 
     if (result.success && result.token) {
       sessionStorage.setItem(TOKEN_KEY, result.token);
@@ -2387,7 +2406,7 @@ async function doAuth() {
       box.style.animation = 'fadeInUp .25s ease';
     }
   } catch (e) {
-    errEl.textContent = '网络错误，请重试';
+    errEl.textContent = e.message || '网络错误，请重试';
     errEl.style.display = 'block';
   }
 }
@@ -2407,12 +2426,7 @@ async function verifyStoredToken() {
   const token = getAuthToken();
   if (!token) return false;
   try {
-    const res = await fetch(AUTH_API, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'verify', token })
-    });
-    const result = await res.json();
+    const result = await callDbFunction({ action: 'verify', token });
     if (!result.success) {
       sessionStorage.removeItem(TOKEN_KEY);
       return false;
