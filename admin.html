@@ -128,37 +128,87 @@ tr:hover{background:#f8f9fb}
 <div class="toast" id="toast"></div>
 <script>
 var FUNC_URL = 'https://kourongmo-d3g3hjn7n3c76c396.tcloudbasegateway.com/functions/db-proxy';
-var ADMIN_PWD = '7080';
+var TOKEN_KEY = 'krmcpc_admin_token';
 var allBrands = [], allProducts = [];
+
+function getToken() { return sessionStorage.getItem(TOKEN_KEY) || ''; }
+function isLoggedIn() { return !!getToken(); }
 
 async function callDb(action, data) {
   data = data || {};
   data.action = action;
-  data.adminToken = ADMIN_PWD;
+  // 写操作携带 Token
+  if (['add','update','delete'].indexOf(action) !== -1) {
+    data.adminToken = getToken();
+  }
   var res = await fetch(FUNC_URL, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
   var result = await res.json();
-  if (!result || !result.success) throw new Error(result ? result.error : '云函数调用失败');
+  if (!result || !result.success) {
+    // Token 过期或无效时提示重新登录
+    if (result && result.error && (result.error.indexOf('权限') !== -1 || result.error.indexOf('登录') !== -1)) {
+      sessionStorage.removeItem(TOKEN_KEY);
+      location.reload();
+    }
+    throw new Error(result ? result.error : '云函数调用失败');
+  }
   return result.data !== undefined ? result.data : result;
 }
 
-function doLogin() {
+async function doLogin() {
   var pwd = document.getElementById('loginPwd').value;
-  if (pwd === ADMIN_PWD) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('adminApp').style.display = 'block';
-    sessionStorage.setItem('admin_auth', '1');
-    loadAllData();
-  } else {
-    document.getElementById('loginError').style.display = 'block';
+  var errEl = document.getElementById('loginError');
+  if (!pwd) {
+    errEl.textContent = '❌ 请输入密码';
+    errEl.style.display = 'block';
+    return;
+  }
+  try {
+    var res = await fetch(FUNC_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'auth', password: pwd })
+    });
+    var result = await res.json();
+    if (result.success && result.token) {
+      sessionStorage.setItem(TOKEN_KEY, result.token);
+      errEl.style.display = 'none';
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminApp').style.display = 'block';
+      loadAllData();
+    } else {
+      errEl.textContent = '❌ ' + (result.error || '密码错误');
+      errEl.style.display = 'block';
+    }
+  } catch (e) {
+    errEl.textContent = '❌ 网络错误，请重试';
+    errEl.style.display = 'block';
   }
 }
-function doLogout() { sessionStorage.removeItem('admin_auth'); location.reload(); }
+function doLogout() { sessionStorage.removeItem(TOKEN_KEY); location.reload(); }
 function goHome() { location.href = 'index.html'; }
 
-if (sessionStorage.getItem('admin_auth') === '1') {
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('adminApp').style.display = 'block';
-  loadAllData();
+// 页面加载时验证 Token
+if (isLoggedIn()) {
+  // 异步验证 Token 有效性
+  fetch(FUNC_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'verify', token: getToken() })
+  }).then(function(res) { return res.json(); }).then(function(result) {
+    if (result.success) {
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('adminApp').style.display = 'block';
+      loadAllData();
+    } else {
+      sessionStorage.removeItem(TOKEN_KEY);
+      // Token 无效，显示登录界面（不需要刷新）
+    }
+  }).catch(function() {
+    // 网络错误时信任本地 Token
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('adminApp').style.display = 'block';
+    loadAllData();
+  });
 }
 
 async function loadAllData() {

@@ -404,6 +404,13 @@ body.edit-mode .img-del-btn{display:flex}
 #editPwdOk{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff}
 #editPwdOk:hover{box-shadow:0 4px 14px rgba(102,126,234,.4)}
 .edit-pwd-err{color:#e53935;font-size:12px;margin-top:10px;display:none}
+.logout-btn{
+  flex-shrink:0;padding:7px 14px;border-radius:50px;
+  border:1.5px solid #999;color:#999;background:#fff;
+  font-size:13px;font-weight:500;cursor:pointer;transition:var(--transition);
+  white-space:nowrap;
+}
+.logout-btn:hover{border-color:#e53935;color:#e53935}
 
 /* ===== EDIT MODE ===== */
 body.edit-mode .editable{
@@ -865,9 +872,9 @@ body.edit-mode #addBrandFab{display:flex}
 <nav class="controls-bar" id="controlsBar">
   <button class="filter-btn" onclick="filterBrand('all',this)">全部品牌</button>
   <!-- brand filter buttons inserted by JS -->
-  <button id="importBtn" onclick="openImportModal()">📥 批量导入</button>
-        <button id="saveExportBtn" onclick="exportHTML()" title="导出/保存当前页面为HTML">💾 保存导出</button>
-<button class="filter-btn" data-brand="Diso">Diso</button><button class="filter-btn" data-brand="WellbeingNutrition">Wellbeing Nutrition</button><button class="filter-btn" data-brand="NuStrips">NuStrips</button><button class="filter-btn" data-brand="MaryRuthOrganics">MaryRuth Organics</button><button class="filter-btn" data-brand="LoveWellness">Love Wellness</button><button class="filter-btn" data-brand="Zenergy">Zenergy</button><button class="filter-btn" data-brand="ARKOfSweden">ARK Of Sweden</button><button class="filter-btn" data-brand="Calmour">Calmour</button><button class="filter-btn active" data-brand="LJSG">黑龙江森工集团</button><button class="filter-btn" data-brand="GHSW">深圳光禾生物</button><button class="filter-btn" data-brand="YLY">欣峰制药</button><button class="edit-toggle" id="editToggle" onclick="toggleEdit()">✏️ 编辑模式</button>
+  <button id="importBtn" onclick="openImportModal()" style="display:none" class="admin-only">📥 批量导入</button>
+        <button id="saveExportBtn" onclick="exportHTML()" title="导出/保存当前页面为HTML" style="display:none" class="admin-only">💾 保存导出</button>
+<button class="filter-btn" data-brand="Diso">Diso</button><button class="filter-btn" data-brand="WellbeingNutrition">Wellbeing Nutrition</button><button class="filter-btn" data-brand="NuStrips">NuStrips</button><button class="filter-btn" data-brand="MaryRuthOrganics">MaryRuth Organics</button><button class="filter-btn" data-brand="LoveWellness">Love Wellness</button><button class="filter-btn" data-brand="Zenergy">Zenergy</button><button class="filter-btn" data-brand="ARKOfSweden">ARK Of Sweden</button><button class="filter-btn" data-brand="Calmour">Calmour</button><button class="filter-btn active" data-brand="LJSG">黑龙江森工集团</button><button class="filter-btn" data-brand="GHSW">深圳光禾生物</button><button class="filter-btn" data-brand="YLY">欣峰制药</button><button class="edit-toggle admin-only" id="editToggle" onclick="toggleEdit()" style="display:none">✏️ 编辑模式</button><button class="logout-btn admin-only" id="logoutBtn" onclick="doLogout()" style="display:none" title="退出管理员登录">🚪 退出</button>
 </nav>
 
 <!-- MAIN -->
@@ -1809,16 +1816,16 @@ body.edit-mode #addBrandFab{display:flex}
 <!-- EDIT HINT -->
 <div class="edit-hint">✏️ 编辑模式已开启 — 点击任意文字即可修改 · 支持上传图片</div>
 
-<!-- EDIT PASSWORD MODAL -->
-<div class="edit-pwd-modal" id="editPwdModal">
+<!-- AUTH MODAL (统一认证弹窗) -->
+<div class="edit-pwd-modal" id="authModal">
   <div class="edit-pwd-box">
-    <h3>🔐 验证编辑权限</h3>
-    <p>请输入编辑密码以解锁编辑功能</p>
-    <input type="password" id="editPwdInput" class="edit-pwd-input" placeholder="· · · ·" onkeydown="if(event.key==='Enter')checkEditPwd()">
-    <div class="edit-pwd-err" id="editPwdErr" style="display: none;">密码错误，请重新输入</div>
+    <h3>🔐 管理员登录</h3>
+    <p>请输入管理员密码以解锁编辑功能</p>
+    <input type="password" id="authPwdInput" class="edit-pwd-input" placeholder="请输入密码" onkeydown="if(event.key==='Enter')doAuth()">
+    <div class="edit-pwd-err" id="authErr" style="display:none;">密码错误，请重新输入</div>
     <div class="edit-pwd-row">
-      <button id="editPwdCancel" onclick="closeEditPwd()">取消</button>
-      <button id="editPwdOk" onclick="checkEditPwd()">确认</button>
+      <button onclick="closeAuthModal()">取消</button>
+      <button onclick="doAuth()">确认登录</button>
     </div>
   </div>
 </div>
@@ -2301,8 +2308,11 @@ function renderHero() {
 }
 
 // init hero on load - ensure stats are updated after all DOM is ready
-document.addEventListener('DOMContentLoaded', function(){
+document.addEventListener('DOMContentLoaded', async function(){
   renderHero();
+  // 验证已存储的 Token 并更新 UI
+  await verifyStoredToken();
+  applyAuthState();
   // Use requestAnimationFrame to ensure DOM is fully rendered before counting
   requestAnimationFrame(function(){
     updateHeroStats();
@@ -2319,48 +2329,131 @@ function filterBrand(id, btn) {
   });
 }
 
-// ===== EDIT MODE (password protected) =====
-const EDIT_PASSWORD = '7080';
+// ===== AUTH & EDIT MODE =====
+const AUTH_API = 'https://kourongmo-d3g3hjn7n3c76c396.tcloudbasegateway.com/functions/db-proxy';
+const TOKEN_KEY = 'krmcpc_admin_token';
+
+function getAuthToken() { return sessionStorage.getItem(TOKEN_KEY) || ''; }
+function isAuthenticated() { return !!getAuthToken(); }
+
+// 打开认证弹窗
+function openAuthModal(callback) {
+  document.getElementById('authPwdInput').value = '';
+  document.getElementById('authErr').style.display = 'none';
+  const modal = document.getElementById('authModal');
+  modal._callback = callback || null;
+  modal.classList.add('open');
+  setTimeout(() => document.getElementById('authPwdInput').focus(), 100);
+}
+
+function closeAuthModal() {
+  document.getElementById('authModal').classList.remove('open');
+}
+
+// 管理员登录（密码 → 云函数 → Token）
+async function doAuth() {
+  const pwd = document.getElementById('authPwdInput').value;
+  const errEl = document.getElementById('authErr');
+
+  if (!pwd) {
+    errEl.textContent = '请输入密码';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  try {
+    const res = await fetch(AUTH_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'auth', password: pwd })
+    });
+    const result = await res.json();
+
+    if (result.success && result.token) {
+      sessionStorage.setItem(TOKEN_KEY, result.token);
+      errEl.style.display = 'none';
+      closeAuthModal();
+      applyAuthState();
+      showToast('✅ 登录成功');
+      // 执行回调（如进入编辑模式）
+      const cb = document.getElementById('authModal')._callback;
+      if (typeof cb === 'function') cb();
+    } else {
+      errEl.textContent = result.error || '密码错误';
+      errEl.style.display = 'block';
+      const box = document.getElementById('authPwdInput').closest('.edit-pwd-box');
+      box.style.animation = 'none';
+      box.offsetHeight;
+      box.style.animation = 'fadeInUp .25s ease';
+    }
+  } catch (e) {
+    errEl.textContent = '网络错误，请重试';
+    errEl.style.display = 'block';
+  }
+}
+
+// 退出登录
+function doLogout() {
+  sessionStorage.removeItem(TOKEN_KEY);
+  if (document.body.classList.contains('edit-mode')) {
+    doToggleEdit(false);
+  }
+  applyAuthState();
+  showToast('已退出登录');
+}
+
+// 验证已存储的 Token 有效性
+async function verifyStoredToken() {
+  const token = getAuthToken();
+  if (!token) return false;
+  try {
+    const res = await fetch(AUTH_API, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'verify', token })
+    });
+    const result = await res.json();
+    if (!result.success) {
+      sessionStorage.removeItem(TOKEN_KEY);
+      return false;
+    }
+    return true;
+  } catch (e) {
+    // 网络错误时保留 Token（避免因网络抖动误判）
+    return true;
+  }
+}
+
+// 应用认证状态到 UI
+function applyAuthState() {
+  const auth = isAuthenticated();
+  // 管理员专属按钮
+  document.querySelectorAll('.admin-only').forEach(el => {
+    el.style.display = auth ? '' : 'none';
+  });
+  // 未登录时强制退出编辑模式
+  if (!auth && document.body.classList.contains('edit-mode')) {
+    doToggleEdit(false);
+  }
+}
 
 function toggleEdit() {
   const body = document.body;
   const isEditMode = body.classList.contains('edit-mode');
 
-  // 退出编辑：直接退出，不需要密码
+  // 退出编辑：直接退出
   if (isEditMode) {
     doToggleEdit(false);
     return;
   }
 
-  // 进入编辑：先弹密码框
-  document.getElementById('editPwdInput').value = '';
-  document.getElementById('editPwdErr').style.display = 'none';
-  document.getElementById('editPwdModal').classList.add('open');
-  // auto-focus
-  setTimeout(() => document.getElementById('editPwdInput').focus(), 100);
-}
-
-function closeEditPwd() {
-  document.getElementById('editPwdModal').classList.remove('open');
-}
-
-function checkEditPwd() {
-  const input = document.getElementById('editPwdInput');
-  const errEl = document.getElementById('editPwdErr');
-  if (input.value === EDIT_PASSWORD) {
-    errEl.style.display = 'none';
-    closeEditPwd();
-    doToggleEdit(true);
-  } else {
-    errEl.style.display = 'block';
-    input.value = '';
-    input.focus();
-    // shake animation
-    const box = input.closest('.edit-pwd-box');
-    box.style.animation = 'none';
-    box.offsetHeight; // reflow
-    box.style.animation = 'fadeInUp .25s ease';
+  // 进入编辑：先检查认证
+  if (!isAuthenticated()) {
+    openAuthModal(() => doToggleEdit(true));
+    return;
   }
+
+  doToggleEdit(true);
 }
 
 function doToggleEdit(on) {
@@ -2834,12 +2927,19 @@ function syncDOMToData() {
 
 // ===== EXPORT / SAVE HTML =====
 function exportHTML(){
+  // 认证检查
+  if (!isAuthenticated()) {
+    openAuthModal(() => exportHTML());
+    return;
+  }
   const clone = document.documentElement.cloneNode(true);
   // Remove modals state
   clone.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));
   clone.querySelectorAll('.toast').forEach(t=>t.classList.remove('show'));
   clone.querySelector('#editToggle') && (clone.querySelector('#editToggle').textContent = '✏️ 编辑模式');
   clone.querySelector('body') && clone.querySelector('body').classList.remove('edit-mode');
+  // 导出的HTML中隐藏管理员专属按钮
+  clone.querySelectorAll('.admin-only').forEach(el => { el.style.display = 'none'; });
   // Save all three theme datasets
   syncDOMToData();
   const scriptTag = clone.querySelector('script');
@@ -2981,6 +3081,11 @@ let _bulkImages = {};
 let _csvParsed = false;
 
 function openImportModal() {
+  // 认证检查
+  if (!isAuthenticated()) {
+    openAuthModal(() => openImportModal());
+    return;
+  }
   _parsedBrands = null; _bulkImages = {}; _csvParsed = false;
   document.getElementById('csvFileName').textContent = '';
   document.getElementById('imgCountTip').textContent = '';
