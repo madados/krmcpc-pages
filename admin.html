@@ -126,6 +126,12 @@ tr:hover{background:#f8f9fb}
   </div>
 </div>
 <div class="toast" id="toast"></div>
+<script>
+// 强制 HTTPS（CloudBase SDK 要求 HTTPS 环境）
+if (location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+  location.replace('https:' + location.href.substring(location.protocol.length));
+}
+</script>
 <script src="//imgcache.qq.com/qcloud/tcbjs/1.10.10/tcb.js"></script>
 <script>
 // CloudBase SDK 直连云函数（免 HTTP 网关，免费版可用）
