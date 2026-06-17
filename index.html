@@ -2040,6 +2040,86 @@ const BRANDS = null; // DISABLED – use getBrands()
 
 ;
 
+
+// ===== CLOUD DATA SYNC =====
+const CATEGORY_TO_THEME = { '宠物': 'pet', '大健康': 'health', '医药': 'pharma' };
+
+function parseGradientColors(gradient) {
+  if (!gradient) return ['#667eea', '#764ba2'];
+  var m = gradient.match(/#([0-9a-fA-F]{3,6})/g);
+  if (m && m.length >= 2) return [m[0], m[1]];
+  if (m && m.length === 1) return [m[0], m[0]];
+  return ['#667eea', '#764ba2'];
+}
+
+function mapCloudToThemeBrands(cloudBrands, cloudProducts) {
+  var result = { pet: [], health: [], pharma: [] };
+  var sortedBrands = cloudBrands.slice().sort(function(a, b) {
+    return (a.order || 99) - (b.order || 99);
+  });
+  sortedBrands.forEach(function(b) {
+    var theme = CATEGORY_TO_THEME[b.category] || 'health';
+    var colors = parseGradientColors(b.gradient);
+    var brandProducts = cloudProducts
+      .filter(function(p) { return p.brandId === b.brandId; })
+      .sort(function(a, b) { return (a.order || 99) - (b.order || 99); })
+      .map(function(p) {
+        var effects = p.effects;
+        if (typeof effects === 'string') {
+          effects = effects.split(/[|｜]/).map(function(s) { return s.trim(); }).filter(Boolean);
+        }
+        if (!Array.isArray(effects)) effects = effects ? [String(effects)] : [];
+        var images = p.images || [];
+        var b64Images = images.map(function(url) {
+          var name = url.split('/').pop() || '';
+          return { file: name, data: url };
+        });
+        var fileNames = images.map(function(url) { return url.split('/').pop() || ''; });
+        return {
+          name: p.name || '',
+          subtitle: p.subtitle || '',
+          effects: effects,
+          desc: p.description || p.desc || '',
+          specs: p.specs || '',
+          images: fileNames,
+          b64_images: b64Images
+        };
+      });
+    result[theme].push({
+      id: b.brandId,
+      name: b.name,
+      origin: b.origin || '',
+      tagline: b.tagline || '',
+      color: colors[0],
+      accent: colors[1],
+      icon: b.icon || '📦',
+      products: brandProducts
+    });
+  });
+  return result;
+}
+
+var _cloudDataLoaded = false;
+async function loadCloudData() {
+  try {
+    var result = await callDbFunction({ action: 'loadAll' });
+    if (result && result.success && result.data) {
+      var mapped = mapCloudToThemeBrands(result.data.brands || [], result.data.products || []);
+      ['pet', 'health', 'pharma'].forEach(function(theme) {
+        THEME_BRANDS[theme] = mapped[theme] || [];
+      });
+      _cloudDataLoaded = true;
+      console.log('✅ 云数据加载成功:', result.data.brands.length, '品牌,', result.data.products.length, '产品');
+      return true;
+    }
+    console.warn('云数据返回异常，使用本地数据:', result);
+    return false;
+  } catch (e) {
+    console.warn('云数据加载失败，使用本地数据:', e.message);
+    return false;
+  }
+}
+
 // ===== RENDER =====
 // Backfill icon for existing brands loaded from static data
 const _defaultIcons = {'petpax':'🐶','nelm':'🦷','zoeuticals':'💊','meltail':'🐱','furlicks':'🌿','heartland':'🏥'};
@@ -2319,6 +2399,12 @@ document.addEventListener('DOMContentLoaded', async function(){
   // 验证已存储的 Token 并更新 UI
   await verifyStoredToken();
   applyAuthState();
+  // 从云数据库加载最新数据并重新渲染（与后台数据源统一）
+  var loaded = await loadCloudData();
+  if (loaded) {
+    renderHero();
+    renderAll();
+  }
   // Use requestAnimationFrame to ensure DOM is fully rendered before counting
   requestAnimationFrame(function(){
     updateHeroStats();
@@ -2932,13 +3018,135 @@ function syncDOMToData() {
 }
 
 
+// 带管理员 Token 的云函数调用（用于写操作）
+async function callDbAuth(data) {
+  data = data || {};
+  if (['add','update','delete'].indexOf(data.action) !== -1) {
+    data.adminToken = getAuthToken();
+  }
+  return await callDbFunction(data);
+}
+
+// 把 THEME_BRANDS 映射回云数据库格式
+function mapThemeBrandsToCloud() {
+  var themeToCat = { pet: '宠物', health: '大健康', pharma: '医药' };
+  var brands = [], products = [];
+  ['pet','health','pharma'].forEach(function(theme, ti) {
+    var themeBrands = THEME_BRANDS[theme] || [];
+    themeBrands.forEach(function(b, bi) {
+      var brandOrder = ti * 100 + bi + 1;
+      brands.push({
+        brandId: b.id, name: b.name, origin: b.origin || '',
+        tagline: b.tagline || '', icon: b.icon || '📦',
+        gradient: 'linear-gradient(135deg,' + b.color + ',' + b.accent + ')',
+        category: themeToCat[theme] || '大健康', order: brandOrder
+      });
+      (b.products || []).forEach(function(p, pi) {
+        var images = (p.b64_images || []).map(function(img){ return img.data; });
+        var effects = Array.isArray(p.effects) ? p.effects.join('|') : (p.effects || '');
+        products.push({
+          brandId: b.id, name: p.name, subtitle: p.subtitle || '',
+          effects: effects, description: p.desc || p.description || '',
+          specs: p.specs || '', images: images, order: pi + 1
+        });
+      });
+    });
+  });
+  return { brands: brands, products: products };
+}
+
+// 全量同步 THEME_BRANDS 到云数据库（diff 后增删改）
+async function saveToCloud() {
+  syncDOMToData();
+  var localData = mapThemeBrandsToCloud();
+  var cloudRes = await callDbFunction({ action: 'loadAll' });
+  if (!cloudRes || !cloudRes.success) throw new Error('加载云数据失败');
+  var cloudBrands = cloudRes.data.brands || [];
+  var cloudProducts = cloudRes.data.products || [];
+  var ops = { brandAdd: 0, brandUpdate: 0, brandDelete: 0, prodAdd: 0, prodUpdate: 0, prodDelete: 0 };
+
+  // 品牌对比（按 brandId 匹配）
+  var localBrandIds = new Set(localData.brands.map(function(b){return b.brandId;}));
+  for (var i = 0; i < cloudBrands.length; i++) {
+    var cb = cloudBrands[i];
+    if (!localBrandIds.has(cb.brandId)) {
+      // 云有本地无 → 删除品牌及其产品
+      var cbProducts = cloudProducts.filter(function(p){return p.brandId === cb.brandId;});
+      for (var j = 0; j < cbProducts.length; j++) {
+        await callDbAuth({ action: 'delete', collection: 'products', docId: cbProducts[j]._id });
+        ops.prodDelete++;
+      }
+      await callDbAuth({ action: 'delete', collection: 'brands', docId: cb._id });
+      ops.brandDelete++;
+    }
+  }
+  for (var k = 0; k < localData.brands.length; k++) {
+    var lb = localData.brands[k];
+    var existing = cloudBrands.find(function(b){return b.brandId === lb.brandId;});
+    var now = new Date().toISOString();
+    lb.updatedAt = now;
+    if (existing) {
+      // 两边都有 → 更新
+      await callDbAuth({ action: 'update', collection: 'brands', docId: existing._id, data: lb });
+      ops.brandUpdate++;
+    } else {
+      // 本地有云无 → 新增
+      lb.createdAt = now;
+      await callDbAuth({ action: 'add', collection: 'brands', data: lb });
+      ops.brandAdd++;
+    }
+  }
+
+  // 重新加载云数据获取最新 _id
+  var cloudRes2 = await callDbFunction({ action: 'loadAll' });
+  cloudProducts = (cloudRes2.data && cloudRes2.data.products) || [];
+
+  // 产品对比（按 brandId + name 匹配）
+  var localProductKeys = new Set(localData.products.map(function(p){return p.brandId + '::' + p.name;}));
+  for (var m = 0; m < cloudProducts.length; m++) {
+    var cp = cloudProducts[m];
+    var key = cp.brandId + '::' + cp.name;
+    if (!localProductKeys.has(key)) {
+      await callDbAuth({ action: 'delete', collection: 'products', docId: cp._id });
+      ops.prodDelete++;
+    }
+  }
+  for (var n = 0; n < localData.products.length; n++) {
+    var lp = localData.products[n];
+    var existingProd = cloudProducts.find(function(p){return p.brandId === lp.brandId && p.name === lp.name;});
+    var now2 = new Date().toISOString();
+    lp.updatedAt = now2;
+    if (existingProd) {
+      await callDbAuth({ action: 'update', collection: 'products', docId: existingProd._id, data: lp });
+      ops.prodUpdate++;
+    } else {
+      lp.createdAt = now2;
+      await callDbAuth({ action: 'add', collection: 'products', data: lp });
+      ops.prodAdd++;
+    }
+  }
+  return ops;
+}
+
+
 // ===== EXPORT / SAVE HTML =====
-function exportHTML(){
+async function exportHTML(){
   // 认证检查
   if (!isAuthenticated()) {
     openAuthModal(() => exportHTML());
     return;
   }
+  // 先同步到云数据库（与后台数据源统一）
+  showToast('⏳ 正在同步到云端...');
+  try {
+    var ops = await saveToCloud();
+    var msg = '✅ 云端同步: 品牌+' + ops.brandAdd + ' 更' + ops.brandUpdate + ' 删' + ops.brandDelete +
+              ', 产品+' + ops.prodAdd + ' 更' + ops.prodUpdate + ' 删' + ops.prodDelete;
+    showToast(msg);
+  } catch(e) {
+    showToast('⚠️ 云端同步失败: ' + e.message + '（仅导出本地文件）');
+  }
+  // 同时导出 HTML 作为本地备份
   const clone = document.documentElement.cloneNode(true);
   // Remove modals state
   clone.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));
