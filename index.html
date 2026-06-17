@@ -2178,6 +2178,11 @@ function renderAll() {
     addProd.onclick=()=>addProduct(brand.id);
     sec.appendChild(addProd);
   });
+
+  // 强制所有动态渲染的图片立即加载（修复 lazy load 在动态 DOM 中不触发的问题）
+  main.querySelectorAll('img[loading="lazy"]').forEach(function(img) {
+    img.setAttribute('loading', 'eager');
+  });
 }
 
 function renderProduct(brand, prod, pi) {
@@ -2191,7 +2196,7 @@ function renderProduct(brand, prod, pi) {
   imgs.forEach((img, idx) => {
     slides += `<div class="gallery-slide" data-img-idx="${idx}" onclick="event.stopPropagation();openLightboxFromSlide(this,${idx},'${prod.name}')">
       <button class="img-del-btn" onclick="event.stopPropagation();deleteProductImage(this)" title="删除此图片">删除图片</button>
-      <img loading="lazy" src="${img.data}" alt="${prod.name} - ${idx+1}" loading="lazy">
+      <img loading="eager" src="${img.data}" alt="${prod.name} - ${idx+1}">
     </div>`;
   });
   if(!slides) slides = `<div class="gallery-slide"><div style="color:#ccc;font-size:40px;text-align:center;width:100%;padding-top:80px">🖼️<br><span style="font-size:13px">暂无图片</span></div></div>`;
@@ -2404,6 +2409,10 @@ document.addEventListener('DOMContentLoaded', async function(){
   if (loaded) {
     renderHero();
     renderAll();
+    // 云数据重新渲染后，强制所有图片立即加载（修复 lazy load 在动态 DOM 中不触发的问题）
+    document.querySelectorAll('img[loading="lazy"]').forEach(function(img) {
+      img.setAttribute('loading', 'eager');
+    });
   }
   // Use requestAnimationFrame to ensure DOM is fully rendered before counting
   requestAnimationFrame(function(){
