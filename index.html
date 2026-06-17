@@ -842,12 +842,11 @@ body.edit-mode #addBrandFab{display:flex}
 .wx-guide-overlay .wx-close-btn:hover{background:rgba(255,255,255,.1)}
 </style>
 <script>
-// 强制 HTTPS（CloudBase SDK 要求 HTTPS 环境）
+// 强制 HTTPS（避免 mixed content，API 是 HTTPS）
 if (location.protocol === 'http:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
   location.replace('https:' + location.href.substring(location.protocol.length));
 }
 </script>
-<script src="//imgcache.qq.com/qcloud/tcbjs/1.10.10/tcb.js"></script>
 </head>
 <body class="" style="">
 
@@ -2337,28 +2336,16 @@ function filterBrand(id, btn) {
 }
 
 // ===== AUTH & EDIT MODE =====
-// CloudBase SDK 直连云函数（免 HTTP 网关，免费版可用）
-const ENV_ID = 'kourongmo-d3g3hjn7n3c76c396';
-let CB_APP = null;
-const CB_READY = (async function() {
-  try {
-    CB_APP = tcb.init({ env: ENV_ID });
-    const auth = CB_APP.auth({ persistence: 'local' });
-    if (!auth.hasLoginState()) {
-      await auth.anonymousAuthProvider().signIn();
-    }
-    return true;
-  } catch (e) {
-    console.error('CloudBase init failed:', e);
-    return false;
-  }
-})();
+// CloudBase HTTP 网关直连云函数
+const FUNC_URL = 'https://kourongmo-d3g3hjn7n3c76c396-1410044026.ap-shanghai.app.tcloudbase.com/api/db-proxy';
 
 async function callDbFunction(data) {
-  if (!CB_APP) { await CB_READY; }
-  if (!CB_APP) { throw new Error('CloudBase 未初始化，请刷新页面重试'); }
-  const res = await CB_APP.callFunction({ name: 'db-proxy', data });
-  return res.result;
+  const res = await fetch(FUNC_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data)
+  });
+  return await res.json();
 }
 
 const TOKEN_KEY = 'krmcpc_admin_token';
