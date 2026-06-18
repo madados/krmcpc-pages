@@ -216,14 +216,16 @@ body{
   font-size:26px;
   flex-shrink:0;
 }
-.brand-info h2{font-size:22px;font-weight:800;margin-bottom:4px}
-.brand-info .tagline{font-size:13px;opacity:.75}
+.brand-info{flex:1;min-width:0}
+.brand-info h2{font-size:22px;font-weight:800;margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.brand-info .tagline{font-size:13px;opacity:.75;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.5}
 .brand-origin{
-  margin-left:auto;
+  flex-shrink:0;
   font-size:13px;
   background:rgba(255,255,255,.18);
   padding:6px 14px;
   border-radius:50px;
+  white-space:nowrap;
   position:relative;z-index:1;
 }
 
@@ -540,16 +542,14 @@ body.edit-mode .add-img-btn{display:flex}
   /* ---- Brand Section (核心：产品双列网格) ---- */
   .brand-section{margin-bottom:44px}
   .brand-header{
-    padding:18px 18px;border-radius:14px;
+    padding:16px 16px;border-radius:14px;
     gap:12px;margin-bottom:18px;
-    flex-wrap:wrap;
   }
   .brand-icon{width:44px;height:44px;font-size:22px;border-radius:12px}
-  .brand-info h2{font-size:18px}
+  .brand-info h2{font-size:17px}
   .brand-info .tagline{font-size:12px}
   .brand-origin{
     font-size:11px;padding:4px 10px;
-    order:-1;width:100%;margin-bottom:4px;
   }
 
   /* 产品卡片双列网格 - 手机端核心样式 */
@@ -564,8 +564,16 @@ body.edit-mode .add-img-btn{display:flex}
     overflow:hidden;
   }
 
-  /* Gallery 缩小（两列后卡片更窄，等比缩小） */
-  .gallery-track{height:180px}
+  /* Gallery 缩小（两列后卡片更窄，等比缩小）+ 滑动切换 */
+  .gallery-track{
+    height:180px;
+    overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+  }
+  .gallery-track::-webkit-scrollbar{display:none}
+  .gallery-slide{scroll-snap-align:start}
   .gallery-slide img:hover{transform:none} /* 移动端取消hover放大 */
 
   /* Card body 紧凑化（两列布局适配） */
@@ -576,12 +584,13 @@ body.edit-mode .add-img-btn{display:flex}
   .product-desc{font-size:11px;line-height:1.5;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .product-specs{font-size:10px}
 
-  /* Gallery 导航按钮缩小 */
-  .gallery-nav{width:30px;height:30px;font-size:13px}
-  .gallery-nav.prev{left:6px}
-  .gallery-nav.next{right:6px}
+  /* 移动端隐藏图片左右箭头（改为滑动切换） */
+  .gallery-nav{display:none!important}
   .img-count-badge{top:8px;right:8px;font-size:10px;padding:3px 8px}
   .gallery-dots{bottom:6px}
+
+  /* 产品卡片点击样式提示 */
+  .product-card{cursor:pointer}
 
   /* ---- Footer ---- */
   .page-footer{padding:20px 16px;font-size:11px}
@@ -623,6 +632,117 @@ body.edit-mode .add-img-btn{display:flex}
   .brand-header{padding:14px 14px;border-radius:12px}
   .container{padding:20px 10px 48px}
   .theme-tab{padding:6px 13px;font-size:11px}
+  .pd-slide{min-height:220px}
+  .pd-slide img{max-height:38vh}
+}
+
+/* ===== MOBILE PRODUCT DETAIL POPUP (移动端产品详情弹窗) ===== */
+.product-detail{
+  display:none;
+  position:fixed;
+  inset:0;
+  z-index:10000;
+  background:#fff;
+  overflow-y:auto;
+  flex-direction:column;
+}
+.product-detail.open{display:flex;animation:slideUp .25s ease}
+@keyframes slideUp{
+  from{transform:translateY(100%)}
+  to{transform:translateY(0)}
+}
+.pd-header{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px;
+  background:#fff;
+  border-bottom:1px solid #eee;
+  position:sticky;top:0;z-index:5;
+}
+.pd-close{
+  width:36px;height:36px;border-radius:50%;
+  border:none;background:#f5f5f5;
+  font-size:20px;color:#333;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.pd-close:active{background:#e5e5e5}
+.pd-brand{
+  font-size:12px;color:#888;
+  margin-bottom:2px;
+}
+.pd-name{
+  font-size:16px;font-weight:700;color:#222;
+  line-height:1.3;
+}
+.pd-gallery{
+  background:#f8f9fb;
+  position:relative;
+}
+.pd-track{
+  display:flex;
+  overflow-x:auto;
+  scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+}
+.pd-track::-webkit-scrollbar{display:none}
+.pd-slide{
+  flex:0 0 100%;
+  scroll-snap-align:start;
+  display:flex;align-items:center;justify-content:center;
+  min-height:280px;
+  padding:16px;
+  background:#f8f9fb;
+}
+.pd-slide img{
+  max-width:100%;
+  max-height:320px;
+  object-fit:contain;
+}
+.pd-dots{
+  display:flex;gap:6px;justify-content:center;
+  padding:10px 0 14px;
+  background:#f8f9fb;
+}
+.pd-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:#ccc;transition:.2s;
+}
+.pd-dot.active{background:#667eea;width:18px;border-radius:4px}
+.pd-body{
+  padding:20px 18px 40px;
+  flex:1;
+}
+.pd-subtitle{
+  font-size:13px;color:#888;
+  margin-bottom:14px;
+}
+.pd-effects{
+  display:flex;flex-wrap:wrap;gap:8px;
+  margin-bottom:18px;
+}
+.pd-effect-tag{
+  font-size:12px;
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  color:#fff;
+  padding:5px 12px;border-radius:50px;
+}
+.pd-desc{
+  font-size:14px;color:#444;line-height:1.7;
+  margin-bottom:20px;
+}
+.pd-specs{
+  background:#f8f9fb;
+  border-radius:12px;
+  padding:14px 16px;
+  font-size:13px;color:#555;
+  line-height:1.7;
+}
+.pd-img-count{
+  position:absolute;top:12px;right:12px;
+  background:rgba(0,0,0,.5);color:#fff;
+  font-size:11px;padding:3px 10px;border-radius:50px;
+}
 }
 
 /* ===== MODAL OVERLAY ===== */
@@ -954,7 +1074,7 @@ body.edit-mode #addBrandFab{display:flex}
           <h2 class="editable" data-field="name" data-bid="WellbeingNutrition">Wellbeing Nutrition</h2>
           <div class="tagline editable" data-field="tagline" data-bid="WellbeingNutrition">轻松补充每日营养，无需吞咽大丸剂</div>
         </div>
-        <div class="brand-origin">US 美国</div>
+        <div class="brand-origin">美国</div>
       </div>
       <div class="products-grid" id="grid-WellbeingNutrition"><div class="product-card">
     <button class="product-delete-btn" onclick="confirmDeleteProduct('WellbeingNutrition',0)" title="删除产品">×</button>
@@ -1043,7 +1163,7 @@ body.edit-mode #addBrandFab{display:flex}
           <h2 class="editable" data-field="name" data-bid="NuStrips">NuStrips</h2>
           <div class="tagline editable" data-field="tagline" data-bid="NuStrips">NuStrips产品安全、清洁，富含人体所需的天然关键成分。</div>
         </div>
-        <div class="brand-origin">US美国</div>
+        <div class="brand-origin">美国</div>
       </div>
       <div class="products-grid" id="grid-NuStrips"><div class="product-card">
     <button class="product-delete-btn" onclick="confirmDeleteProduct('NuStrips',0)" title="删除产品">×</button>
@@ -1135,7 +1255,7 @@ body.edit-mode #addBrandFab{display:flex}
           <h2 class="editable" data-field="name" data-bid="MaryRuthOrganics">MaryRuth Organics</h2>
           <div class="tagline editable" data-field="tagline" data-bid="MaryRuthOrganics">无论在家还是外出，这些美味能量条都能帮助您提升能量代谢！只需撕下一条，放在舌头上，让它慢慢溶解即可</div>
         </div>
-        <div class="brand-origin">US 美国</div>
+        <div class="brand-origin">美国</div>
       </div>
       <div class="products-grid" id="grid-MaryRuthOrganics"><div class="product-card">
     <button class="product-delete-btn" onclick="confirmDeleteProduct('MaryRuthOrganics',0)" title="删除产品">×</button>
@@ -1200,7 +1320,7 @@ body.edit-mode #addBrandFab{display:flex}
           <h2 class="editable" data-field="name" data-bid="LoveWellness">Love Wellness</h2>
           <div class="tagline editable" data-field="tagline" data-bid="LoveWellness">Love Wellness （乐健康能量速溶条）适合需要快速、平稳提神的人群。它以可溶性薄片形式提供温和、不焦虑的能量提升，不需水或药片，便于随身携带与即时使用。</div>
         </div>
-        <div class="brand-origin">US 美国</div>
+        <div class="brand-origin">美国</div>
       </div>
       <div class="products-grid" id="grid-LoveWellness"><div class="product-card">
     <button class="product-delete-btn" onclick="confirmDeleteProduct('LoveWellness',0)" title="删除产品">×</button>
@@ -1399,7 +1519,7 @@ body.edit-mode #addBrandFab{display:flex}
           <h2 class="editable" data-field="name" data-bid="Zenergy">Zenergy</h2>
           <div class="tagline editable" data-field="tagline" data-bid="Zenergy">能量提升</div>
         </div>
-        <div class="brand-origin">US 美国</div>
+        <div class="brand-origin">美国</div>
       </div>
       <div class="products-grid" id="grid-Zenergy"><div class="product-card">
     <button class="product-delete-btn" onclick="confirmDeleteProduct('Zenergy',0)" title="删除产品">×</button>
@@ -1481,7 +1601,7 @@ body.edit-mode #addBrandFab{display:flex}
           <h2 class="editable" data-field="name" data-bid="Calmour">Calmour</h2>
           <div class="tagline editable" data-field="tagline" data-bid="Calmour">Calmour：速溶维生素条 | 天然能量补充和助眠剂</div>
         </div>
-        <div class="brand-origin">US 美国</div>
+        <div class="brand-origin">美国</div>
       </div>
       <div class="products-grid" id="grid-Calmour"><div class="product-card">
     <button class="product-delete-btn" onclick="confirmDeleteProduct('Calmour',0)" title="删除产品">×</button>
@@ -1585,7 +1705,7 @@ body.edit-mode #addBrandFab{display:flex}
           <h2 class="editable" data-field="name" data-bid="LJSG">黑龙江森工集团</h2>
           <div class="tagline editable" data-field="tagline" data-bid="LJSG">传统养生易吸收把大自然搬上您的餐桌</div>
         </div>
-        <div class="brand-origin">CN 中国</div>
+        <div class="brand-origin">中国</div>
       </div>
       <div class="products-grid" id="grid-LJSG"><div class="product-card">
     <button class="product-delete-btn" onclick="confirmDeleteProduct('LJSG',0)" title="删除产品">×</button>
@@ -1620,7 +1740,7 @@ body.edit-mode #addBrandFab{display:flex}
           <h2 class="editable" data-field="name" data-bid="GHSW">深圳光禾生物</h2>
           <div class="tagline editable" data-field="tagline" data-bid="GHSW">现在，片记用一张“会融化”的膜，让养生变得像吃糖一样简单。</div>
         </div>
-        <div class="brand-origin">CN　中国</div>
+        <div class="brand-origin">中国</div>
       </div>
       <div class="products-grid" id="grid-GHSW"><div class="product-card">
     <button class="product-delete-btn" onclick="confirmDeleteProduct('GHSW',0)" title="删除产品">×</button>
@@ -1711,7 +1831,7 @@ body.edit-mode #addBrandFab{display:flex}
           <h2 class="editable" data-field="name" data-bid="YLY">欣峰制药</h2>
           <div class="tagline editable" data-field="tagline" data-bid="YLY">欣峰制药旗下的口服美容与抗衰品牌“养力养”，利用独家食品闪释技术，推出了三款针对熬夜、肤色暗沉及失眠人群的口溶膜产品</div>
         </div>
-        <div class="brand-origin">CN 中国</div>
+        <div class="brand-origin">中国</div>
       </div>
       <div class="products-grid" id="grid-YLY"><div class="product-card">
     <button class="product-delete-btn" onclick="confirmDeleteProduct('YLY',0)" title="删除产品">×</button>
@@ -2149,7 +2269,103 @@ function renderProduct(brand, prod, pi) {
       </div>
     </div>
   `;
+
+  // 移动端：点击卡片（非图片区域）打开产品详情
+  card.addEventListener('click', function(e) {
+    if (!isMobile()) return;
+    // 点击图片/gallery区域不触发详情（保留滑动浏览）
+    if (e.target.closest('.gallery-slide') || e.target.closest('.gallery-nav') || e.target.closest('.gallery-dot') || e.target.closest('.img-del-btn') || e.target.closest('.product-delete-btn') || e.target.closest('.add-img-btn')) return;
+    openProductDetail(prod, brand.name);
+  });
+
+  // 移动端：gallery滑动时更新dots
+  const track = card.querySelector('.gallery-track');
+  if (track) {
+    track.addEventListener('scroll', function() {
+      const dots = card.querySelectorAll('.gallery-dot');
+      const slides = track.querySelectorAll('.gallery-slide');
+      if (!slides.length) return;
+      let cur = Math.round(track.scrollLeft / track.offsetWidth);
+      cur = Math.max(0, Math.min(cur, slides.length - 1));
+      dots.forEach((d,i)=>d.classList.toggle('active',i===cur));
+    });
+  }
+
   return card;
+}
+
+// ===== MOBILE DETECTION =====
+function isMobile() {
+  return window.innerWidth <= 640;
+}
+
+// ===== MOBILE PRODUCT DETAIL POPUP =====
+function openProductDetail(prod, brandName) {
+  // 移除已有详情
+  let existing = document.getElementById('productDetail');
+  if (existing) existing.remove();
+
+  const imgs = prod.b64_images || [];
+  const detail = document.createElement('div');
+  detail.className = 'product-detail open';
+  detail.id = 'productDetail';
+
+  // gallery slides
+  let slides = '';
+  imgs.forEach((img, idx) => {
+    slides += `<div class="pd-slide"><img src="${img.data}" alt="${prod.name} - ${idx+1}"></div>`;
+  });
+  if(!slides) slides = `<div class="pd-slide"><div style="color:#ccc;font-size:40px;text-align:center">🖼️<br><span style="font-size:13px">暂无图片</span></div></div>`;
+
+  // dots
+  let dots = imgs.map((_, i) => `<span class="pd-dot ${i===0?'active':''}"></span>`).join('');
+
+  // effects
+  let effectTags = prod.effects.map(e=>`<span class="pd-effect-tag">${e}</span>`).join('');
+
+  detail.innerHTML = `
+    <div class="pd-header">
+      <button class="pd-close" onclick="closeProductDetail()">&times;</button>
+      <div style="flex:1;min-width:0">
+        <div class="pd-brand">${brandName}</div>
+        <div class="pd-name">${prod.name}</div>
+      </div>
+    </div>
+    <div class="pd-gallery">
+      <div class="pd-track" id="pdTrack">${slides}</div>
+      ${imgs.length>1?`<span class="pd-img-count">1 / ${imgs.length}</span>`:''}
+    </div>
+    ${imgs.length>1?`<div class="pd-dots">${dots}</div>`:''}
+    <div class="pd-body">
+      ${prod.subtitle?`<div class="pd-subtitle">${prod.subtitle}</div>`:''}
+      ${effectTags?`<div class="pd-effects">${effectTags}</div>`:''}
+      <div class="pd-desc">${prod.desc}</div>
+      ${prod.specs?`<div class="pd-specs">${prod.specs}</div>`:''}
+    </div>
+  `;
+  document.body.appendChild(detail);
+  document.body.style.overflow = 'hidden';
+
+  // 滑动切换更新dots和计数
+  const pdTrack = detail.querySelector('#pdTrack');
+  if (pdTrack && imgs.length > 1) {
+    pdTrack.addEventListener('scroll', function() {
+      const pdDots = detail.querySelectorAll('.pd-dot');
+      const pdSlides = pdTrack.querySelectorAll('.pd-slide');
+      if (!pdSlides.length) return;
+      let cur = Math.round(pdTrack.scrollLeft / pdTrack.offsetWidth);
+      cur = Math.max(0, Math.min(cur, pdSlides.length - 1));
+      pdDots.forEach((d,i)=>d.classList.toggle('active',i===cur));
+      const badge = detail.querySelector('.pd-img-count');
+      if (badge) badge.textContent = `${cur+1} / ${imgs.length}`;
+    });
+  }
+}
+
+function closeProductDetail() {
+  const detail = document.getElementById('productDetail');
+  if (detail) detail.remove();
+  document.body.style.overflow = '';
 }
 
 // ===== GALLERY SLIDE =====
