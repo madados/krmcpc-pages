@@ -537,7 +537,7 @@ body.edit-mode .add-img-btn{display:flex}
   /* ---- Container ---- */
   .container{padding:28px 12px 60px}
 
-  /* ---- Brand Section (核心：产品横向滚动) ---- */
+  /* ---- Brand Section (核心：产品双列网格) ---- */
   .brand-section{margin-bottom:44px}
   .brand-header{
     padding:18px 18px;border-radius:14px;
@@ -552,40 +552,29 @@ body.edit-mode .add-img-btn{display:flex}
     order:-1;width:100%;margin-bottom:4px;
   }
 
-  /* 产品卡片横向滚动 - 手机端核心样式 */
+  /* 产品卡片双列网格 - 手机端核心样式 */
   .products-grid{
-    display:flex;
-    overflow-x:auto;
-    scroll-snap-type:x mandatory;
-    scroll-behavior:smooth;
-    -webkit-overflow-scrolling:touch;
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
     gap:14px;
-    padding-bottom:8px; /* 给滚动条留空间 */
-    scrollbar-width:none; /* Firefox隐藏滚动条 */
-    /* 不再使用grid，改用flex横向排列 */
   }
-  .products-grid::-webkit-scrollbar{display:none} /* Safari/Chrome隐藏滚动条 */
 
   .product-card{
-    flex:0 0 calc(78vw); /* 每张卡片占屏幕宽度的78% */
-    min-width:280px;
-    max-width:360px;
     border-radius:14px;
-    scroll-snap-align:start;
-    /* 保持hover效果但在触摸设备上减弱 */
+    overflow:hidden;
   }
 
-  /* Gallery 缩小 */
-  .gallery-track{height:220px}
+  /* Gallery 缩小（两列后卡片更窄，等比缩小） */
+  .gallery-track{height:180px}
   .gallery-slide img:hover{transform:none} /* 移动端取消hover放大 */
 
-  /* Card body 紧凑化 */
-  .card-body{padding:16px 16px 18px}
-  .product-name{font-size:15px}
-  .product-subtitle{font-size:11px;margin-bottom:10px}
-  .effect-tag{font-size:10px;padding:3px 8px}
-  .product-desc{font-size:12px;line-height:1.6;margin-bottom:8px}
-  .product-specs{font-size:11px}
+  /* Card body 紧凑化（两列布局适配） */
+  .card-body{padding:12px 12px 14px}
+  .product-name{font-size:13px}
+  .product-subtitle{font-size:10px;margin-bottom:8px}
+  .effect-tag{font-size:10px;padding:3px 7px}
+  .product-desc{font-size:11px;line-height:1.5;margin-bottom:6px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .product-specs{font-size:10px}
 
   /* Gallery 导航按钮缩小 */
   .gallery-nav{width:30px;height:30px;font-size:13px}
@@ -629,7 +618,8 @@ body.edit-mode .add-img-btn{display:flex}
 
 /* 超小屏 (<380px) 进一步压缩 */
 @media(max-width:380px){
-  .product-card{flex:0 0 calc(88vw)}
+  .products-grid{gap:10px}
+  .gallery-track{height:160px}
   .brand-header{padding:14px 14px;border-radius:12px}
   .container{padding:20px 10px 48px}
   .theme-tab{padding:6px 13px;font-size:11px}
