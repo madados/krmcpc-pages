@@ -2224,13 +2224,128 @@ function renderHero() {
 // init hero on load - ensure stats are updated after all DOM is ready
 document.addEventListener('DOMContentLoaded', function(){
   renderHero();
-  // Use requestAnimationFrame to ensure DOM is fully rendered before counting
+  // 先用静态数据渲染，再异步加载云数据覆盖
   requestAnimationFrame(function(){
     updateHeroStats();
-    // Image protection: prevent right-click / drag / save
     protectImages();
   });
+  // 异步加载云数据库数据（admin后台编辑的数据）
+  loadCloudData();
 });
+
+// ===== CLOUD DATA LOADING (从CloudBase加载admin后台编辑的数据) =====
+var CLOUD_FUNC_URL = 'https://kourongmo-d3g3hjn7n3c76c396-1410044026.ap-shanghai.app.tcloudbase.com/api/db-proxy';
+
+async function loadCloudData() {
+  try {
+    var res = await fetch(CLOUD_FUNC_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({action: 'loadAll'})
+    });
+    var result = await res.json();
+    if (!result || !result.success) {
+      console.log('Cloud data unavailable, using static data');
+      return;
+    }
+    var data = result.data || result;
+    var cloudBrands = data.brands || [];
+    var cloudProducts = data.products || [];
+    if (cloudBrands.length === 0) {
+      console.log('No cloud brands found, using static data');
+      return;
+    }
+    // 将云数据映射为前台 THEME_BRANDS 格式
+    var mapped = mapCloudToThemeBrands(cloudBrands, cloudProducts);
+    if (mapped.pet.length > 0 || mapped.health.length > 0 || mapped.pharma.length > 0) {
+      THEME_BRANDS.pet = mapped.pet;
+      THEME_BRANDS.health = mapped.health;
+      THEME_BRANDS.pharma = mapped.pharma;
+      // 重新渲染
+      renderAll();
+      updateHeroStats();
+      // 重新绑定图片保护
+      setTimeout(protectImages, 100);
+      console.log('Cloud data loaded: ' + (mapped.pet.length + mapped.health.length + mapped.pharma.length) + ' brands');
+    }
+  } catch(e) {
+    console.log('Cloud load failed, using static data:', e.message);
+  }
+}
+
+function mapCloudToThemeBrands(brands, products) {
+  var themeMap = {'宠物': 'pet', '大健康': 'health', '医药': 'pharma'};
+  var result = {pet: [], health: [], pharma: []};
+
+  // 按 order 排序
+  brands.sort(function(a, b) { return (a.order || 99) - (b.order || 99); });
+
+  // 构建静态数据的图片映射（作为fallback）
+  var staticImgMap = {};
+  ['pet','health','pharma'].forEach(function(theme) {
+    (THEME_BRANDS[theme] || []).forEach(function(brand) {
+      var prods = brand.products || [];
+      prods.forEach(function(prod) {
+        var key = (brand.id || '') + '::' + (prod.name || '');
+        var imgs = (prod.b64_images || []).map(function(img) { return img.data; });
+        if (imgs.length > 0) staticImgMap[key] = imgs;
+      });
+    });
+  });
+
+  brands.forEach(function(b) {
+    var themeKey = themeMap[b.category] || 'health';
+    var brandProducts = products.filter(function(p) { return p.brandId === b.brandId; });
+    brandProducts.sort(function(a, b) { return (a.order || 99) - (b.order || 99); });
+
+    // 查找静态数据中同品牌的图片作为fallback
+    var staticBrandKey = (b.brandId || '');
+
+    var prodList = brandProducts.map(function(p) {
+      var imgUrls = (p.images || []).filter(function(url) {
+        // 过滤掉损坏的URL（base64片段而非真实文件路径）
+        if (!url || url.length < 40) return false;
+        // 有效URL应包含图片扩展名或 admin_/v3_ 前缀
+        if (/\.(png|jpg|jpeg|webp|gif)$/i.test(url)) return true;
+        if (/\/images\/(admin_|v3_)/i.test(url)) return true;
+        // 其他短URL（base64片段）视为损坏
+        return false;
+      });
+
+      // 如果云数据图片为空或全部损坏，尝试从静态数据获取
+      if (imgUrls.length === 0) {
+        var fallbackKey = staticBrandKey + '::' + (p.name || '');
+        if (staticImgMap[fallbackKey]) {
+          imgUrls = staticImgMap[fallbackKey];
+        }
+      }
+
+      return {
+        name: p.name || '',
+        subtitle: p.subtitle || '',
+        effects: p.effects ? p.effects.split('|').filter(function(e) { return e; }) : [],
+        desc: p.description || p.desc || '',
+        specs: p.specs || '',
+        images: imgUrls,
+        b64_images: imgUrls.map(function(url) { return {file: '', data: url}; })
+      };
+    });
+
+    var brand = {
+      id: b.brandId || b._id,
+      name: b.name || '',
+      origin: b.origin || '',
+      tagline: b.tagline || b.description || '',
+      color: b.color || '#667eea',
+      accent: b.accent || '#764ba2',
+      icon: b.icon || _defaultIcons[b.brandId] || '🐾',
+      products: prodList
+    };
+    result[themeKey].push(brand);
+  });
+
+  return result;
+}
 
 // ===== IMAGE PROTECTION =====
 function protectImages() {
