@@ -116,6 +116,7 @@ tr:hover{background:#f8f9fb}
       <div class="stat-card"><div class="num" id="statProducts">-</div><div class="label">产品数</div></div>
       <div class="stat-card"><div class="num" id="statImages">-</div><div class="label">图片数</div></div>
       <div class="stat-card"><div class="num" id="statCats">-</div><div class="label">分类数</div></div>
+      <div class="stat-card"><div class="num" id="statFactories">-</div><div class="label">工厂数</div></div>
     </div>
 
     <!-- 品牌管理 -->
@@ -213,6 +214,50 @@ tr:hover{background:#f8f9fb}
 
       <div style="overflow-x:auto"><table id="productTable"><thead><tr><th>产品名称</th><th>品牌</th><th>功效</th><th>图片</th><th>操作</th></tr></thead><tbody id="productTableBody"></tbody></table></div>
     </div>
+
+    <!-- 共享工厂管理 -->
+    <div class="section">
+      <h2>共享工厂管理（CRO 服务）
+        <button class="btn btn-primary" onclick="openFactoryForm('add')">+ 添加工厂</button>
+      </h2>
+      <div id="factoryForm" style="display:none;margin-bottom:20px;padding:16px;background:#f8f9fa;border-radius:8px">
+        <span class="form-title-edit" id="factoryFormTitle">✏️ 编辑模式</span>
+        <input type="hidden" id="f_editId" value="">
+        <div class="form-row">
+          <div class="form-group"><label>工厂名称 *</label><input id="f_name" placeholder="如某某生物科技"></div>
+          <div class="form-group"><label>分类 *</label><select id="f_category"><option value="宠物">宠物</option><option value="大健康">大健康</option><option value="医药">医药</option></select></div>
+          <div class="form-group"><label>排序</label><input id="f_order" type="number" value="99"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>规模</label><input id="f_scale" placeholder="如300人 · 年产能10亿片"></div>
+          <div class="form-group"><label>注册资金</label><input id="f_capital" placeholder="如5000万人民币"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>产品类型</label><input id="f_productType" placeholder="如宠物保健品口溶膜"></div>
+          <div class="form-group"><label>地区</label><input id="f_region" placeholder="如中国 浙江"></div>
+        </div>
+        <div class="form-group"><label>工厂简介 / CRO 服务说明</label><textarea id="f_description" placeholder="支持哪些 CRO 委托研发与生产服务..."></textarea></div>
+
+        <!-- Logo/厂房图片 -->
+        <div style="margin-top:12px;margin-bottom:8px;font-size:12px;color:var(--text-light);font-weight:500">Logo / 厂房图片（可多选，第一张作为 Logo 展示）</div>
+        <div class="upload-zone" id="f_uploadZone" onclick="document.getElementById('f_fileInput').click()">
+          <div class="upload-zone-icon">📁</div>
+          <div class="upload-zone-text">点击选择图片 或 拖拽图片到此区域</div>
+          <div style="font-size:11px;color:#aaa;margin-top:4px">支持 JPG/PNG/WebP，可一次选择多张</div>
+        </div>
+        <input type="file" id="f_fileInput" accept="image/*" multiple style="display:none" onchange="handleFileSelect(this.files)">
+        <div class="upload-progress-bar" id="f_progressBar"><div class="fill" id="f_progressFill" style="width:0%"></div></div>
+        <div class="image-preview-grid" id="f_imagePreview"></div>
+        <input type="hidden" id="f_images" value="">
+
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="saveFactory()">💾 保存工厂</button>
+          <button class="btn" onclick="closeFactoryForm()" style="background:#eee">取消</button>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto"><table id="factoryTable"><thead><tr><th>排序</th><th>名称</th><th>分类</th><th>规模</th><th>注册资金</th><th>产品类型</th><th>地区</th><th>图片</th><th>操作</th></tr></thead><tbody id="factoryTableBody"></tbody></table></div>
+    </div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -226,7 +271,7 @@ if (location.protocol === 'http:' && location.hostname !== 'localhost' && locati
 // CloudBase HTTP 网关
 var FUNC_URL = 'https://kourongmo-d3g3hjn7n3c76c396-1410044026.ap-shanghai.app.tcloudbase.com/api/db-proxy';
 var TOKEN_KEY = 'krmcpc_admin_token';
-var allBrands = [], allProducts = [];
+var allBrands = [], allProducts = [], allFactories = [];
 
 // COS 配置（浏览器端直传）- 密钥base64编码存储避免泄露
 var COS_CONFIG = {
@@ -307,8 +352,9 @@ var COLOR_PRESETS = [
 ];
 
 // 编辑状态
-var editingBrandId = null, editingProductId = null;
+var editingBrandId = null, editingProductId = null, editingFactoryId = null;
 var pendingUploads = []; // 待上传图片数组 {file, url, status}
+var uploadCtx = { prefix: 'p_' }; // 当前上传组件前缀：'p_' 产品表单 / 'f_' 工厂表单
 var sortMode = false;
 
 function getToken() { return sessionStorage.getItem(TOKEN_KEY) || ''; }
@@ -391,12 +437,15 @@ async function loadAllData() {
     var data = await callDb('loadAll');
     allBrands = data.brands || [];
     allProducts = data.products || [];
+    allFactories = data.factories || [];
     // 按 order 排序
     allBrands.sort(function(a,b){ return (a.order||99) - (b.order||99); });
     allProducts.sort(function(a,b){ return (a.order||99) - (b.order||99); });
+    allFactories.sort(function(a,b){ return (a.order||99) - (b.order||99); });
     updateDashboard();
     renderBrands();
     renderProducts();
+    renderFactories();
     populateBrandSelect();
     initColorPalette();
   } catch(e) {
@@ -413,6 +462,7 @@ function updateDashboard() {
   var cats = [];
   allBrands.forEach(function(b) { if (cats.indexOf(b.category) === -1) cats.push(b.category); });
   document.getElementById('statCats').textContent = cats.length;
+  document.getElementById('statFactories').textContent = allFactories.length;
 }
 
 // ==================== 品牌渲染 ====================
@@ -628,6 +678,7 @@ function dragEndBrand(e) {
 
 // ==================== 产品表单（添加/编辑） ====================
 function openProductForm(mode, docId) {
+  uploadCtx.prefix = 'p_';
   clearProductForm();
   pendingUploads = [];
   renderImagePreview();
@@ -696,6 +747,118 @@ async function saveProduct() {
   } catch(e) { toast('❌ 保存失败: ' + e.message, 'error'); }
 }
 
+// ==================== 共享工厂（CRO 服务） ====================
+function renderFactories() {
+  var tbody = document.getElementById('factoryTableBody');
+  tbody.innerHTML = allFactories.map(function(f, idx) {
+    var imgCount = (f.images || []).length;
+    var thumb = imgCount > 0 ? '<img src="' + f.images[0] + '" style="width:32px;height:32px;border-radius:6px;object-fit:cover">' : '-';
+    return '<tr data-doc-id="' + f._id + '">' +
+      '<td>' + (idx+1) + '</td>' +
+      '<td>' + esc(f.name) + '</td>' +
+      '<td>' + esc(f.category || '-') + '</td>' +
+      '<td>' + esc(f.scale || '-') + '</td>' +
+      '<td>' + esc(f.capital || '-') + '</td>' +
+      '<td>' + esc(f.productType || '-') + '</td>' +
+      '<td>' + esc(f.region || '-') + '</td>' +
+      '<td>' + thumb + '</td>' +
+      '<td class="actions">' +
+        '<button class="btn btn-primary btn-sm" onclick="openFactoryForm(\'edit\',\'' + f._id + '\')">编辑</button>' +
+        '<button class="btn btn-danger btn-sm" onclick="deleteFactory(\'' + f._id + '\',\'' + esc(f.name) + '\')">删除</button>' +
+      '</td></tr>';
+  }).join('');
+}
+
+function openFactoryForm(mode, docId) {
+  uploadCtx.prefix = 'f_';
+  clearFactoryForm();
+  pendingUploads = [];
+  renderImagePreview();
+  if (mode === 'edit' && docId) {
+    var f = allFactories.find(function(x) { return x._id === docId; });
+    if (!f) { toast('❌ 工厂不存在', 'error'); return; }
+    editingFactoryId = docId;
+    document.getElementById('factoryFormTitle').classList.add('show');
+    document.getElementById('f_editId').value = docId;
+    document.getElementById('f_name').value = f.name || '';
+    document.getElementById('f_category').value = f.category || '宠物';
+    document.getElementById('f_scale').value = f.scale || '';
+    document.getElementById('f_capital').value = f.capital || '';
+    document.getElementById('f_productType').value = f.productType || '';
+    document.getElementById('f_region').value = f.region || '';
+    document.getElementById('f_description').value = f.description || '';
+    document.getElementById('f_order').value = f.order || 99;
+    // 已有图片填入 pendingUploads（状态 done）
+    if (f.images && f.images.length) {
+      pendingUploads = f.images.map(function(url) { return {url: url, status: 'done', name: url.split('/').pop()}; });
+      renderImagePreview();
+    }
+  } else {
+    editingFactoryId = null;
+    document.getElementById('factoryFormTitle').classList.remove('show');
+  }
+  document.getElementById('factoryForm').style.display = 'block';
+  document.getElementById('factoryForm').scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function closeFactoryForm() {
+  document.getElementById('factoryForm').style.display = 'none';
+  editingFactoryId = null;
+  pendingUploads = [];
+  clearFactoryForm();
+}
+
+function clearFactoryForm() {
+  ['f_name','f_category','f_scale','f_capital','f_productType','f_region','f_description','f_images','f_order','f_editId'].forEach(function(id){
+    var el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.getElementById('f_imagePreview').innerHTML = '';
+  document.getElementById('f_progressBar').classList.remove('show');
+  document.getElementById('f_progressFill').style.width = '0%';
+}
+
+async function saveFactory() {
+  var name = document.getElementById('f_name').value.trim();
+  if (!name) { toast('⚠️ 请填写工厂名称', 'warn'); return; }
+  // 检查是否有未上传完成的图片
+  var pendingCount = pendingUploads.filter(function(p) { return p.status === 'uploading'; }).length;
+  if (pendingCount > 0) { toast('⏳ 还有 ' + pendingCount + ' 张图片正在上传，请稍候', 'warn'); return; }
+  var images = pendingUploads.filter(function(p) { return p.status === 'done' && p.url; }).map(function(p) { return p.url; });
+  var data = {
+    name: name,
+    category: document.getElementById('f_category').value,
+    scale: document.getElementById('f_scale').value.trim(),
+    capital: document.getElementById('f_capital').value.trim(),
+    productType: document.getElementById('f_productType').value.trim(),
+    region: document.getElementById('f_region').value.trim(),
+    description: document.getElementById('f_description').value.trim(),
+    images: images,
+    order: parseInt(document.getElementById('f_order').value) || 99,
+    updatedAt: new Date().toISOString()
+  };
+  try {
+    if (editingFactoryId) {
+      await callDb('update', {collection:'factories', docId: editingFactoryId, data: data});
+      toast('✅ 工厂已更新', 'success');
+    } else {
+      data.createdAt = new Date().toISOString();
+      await callDb('add', {collection:'factories', data: data});
+      toast('✅ 工厂添加成功', 'success');
+    }
+    closeFactoryForm();
+    loadAllData();
+  } catch(e) { toast('❌ 保存失败: ' + e.message, 'error'); }
+}
+
+async function deleteFactory(docId, name) {
+  if (!confirm('确定删除工厂 "' + name + '"？此操作不可恢复！')) return;
+  try {
+    await callDb('delete', {collection:'factories', docId:docId});
+    toast('✅ 工厂已删除', 'success');
+    loadAllData();
+  } catch(e) { toast('❌ 删除失败: ' + e.message, 'error'); }
+}
+
 // ==================== 图片上传 ====================
 function handleFileSelect(files) {
   if (!files || !files.length) return;
@@ -708,25 +871,27 @@ function handleFileSelect(files) {
   uploadPendingImages();
 }
 
-// 拖拽上传
+// 拖拽上传（产品表单 + 工厂表单共用）
 var uploadZone = null;
 document.addEventListener('DOMContentLoaded', function() {
-  uploadZone = document.getElementById('p_uploadZone');
-  if (uploadZone) {
+  ['p_uploadZone','f_uploadZone'].forEach(function(zid) {
+    uploadZone = document.getElementById(zid);
+    if (!uploadZone) return;
     uploadZone.addEventListener('dragover', function(e) { e.preventDefault(); this.classList.add('dragover'); });
     uploadZone.addEventListener('dragleave', function(e) { e.preventDefault(); this.classList.remove('dragover'); });
     uploadZone.addEventListener('drop', function(e) {
       e.preventDefault();
       this.classList.remove('dragover');
+      uploadCtx.prefix = this.id === 'f_uploadZone' ? 'f_' : 'p_';
       handleFileSelect(e.dataTransfer.files);
     });
-  }
+  });
 });
 
 async function uploadPendingImages() {
   var queue = pendingUploads.filter(function(p) { return p.status === 'uploading'; });
   if (!queue.length) return;
-  var progressBar = document.getElementById('p_progressBar');
+  var progressBar = document.getElementById(uploadCtx.prefix + 'progressBar');
   progressBar.classList.add('show');
   // 先确保 COS SDK 已加载
   toast('⏳ 正在加载上传组件...', 'info');
@@ -792,11 +957,11 @@ function uploadToCOS(key, file, onProgress) {
 
 function updateProgressBar(done, total, currentPercent) {
   var overall = ((done + currentPercent/100) / total) * 100;
-  document.getElementById('p_progressFill').style.width = overall + '%';
+  document.getElementById(uploadCtx.prefix + 'progressFill').style.width = overall + '%';
 }
 
 function renderImagePreview() {
-  var grid = document.getElementById('p_imagePreview');
+  var grid = document.getElementById(uploadCtx.prefix + 'imagePreview');
   if (!pendingUploads.length) { grid.innerHTML = ''; return; }
   grid.innerHTML = pendingUploads.map(function(p, i) {
     var thumb = p.url ? p.url : (p.file ? URL.createObjectURL(p.file) : '');
