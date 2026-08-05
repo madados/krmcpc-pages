@@ -198,27 +198,112 @@ img{
 }
 .edit-toggle:hover,.edit-toggle.on{background:#ff6b6b;color:#fff}
 
-/* ===== CATEGORY TABS ===== */
-.theme-tabs{
-  display:flex;gap:0;
-  background:linear-gradient(135deg,#1a1a2e,#16213e);
-  padding:8px 24px;overflow-x:auto;scrollbar-width:none;
+/* ===== SIDEBAR NAV ===== */
+body{display:flex}
+.sidebar{
+  width:220px;flex-shrink:0;
+  background:linear-gradient(180deg,#141a33,#1b2340);
+  color:#fff;
+  position:sticky;top:0;height:100vh;
+  display:flex;flex-direction:column;
+  z-index:200;
+  transition:width .3s cubic-bezier(.4,0,.2,1);
+  overflow:hidden;
 }
-.theme-tabs::-webkit-scrollbar{display:none}
-.theme-tab{
-  flex-shrink:0;padding:8px 22px;border-radius:50px;
-  border:1.5px solid rgba(255,255,255,.15);
-  background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);
-  font-size:13px;font-weight:600;cursor:pointer;transition:.25s;white-space:nowrap;
+.sidebar-brand{
+  display:flex;align-items:center;gap:10px;
+  padding:20px 18px;white-space:nowrap;
+  border-bottom:1px solid rgba(255,255,255,.08);
 }
-.theme-tab:hover{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.3)}
-.theme-tab.active{background:#fff;color:#1a1a2e;border-color:transparent;font-weight:700;box-shadow:0 4px 16px rgba(0,0,0,.2)}
-
+.sb-logo{
+  width:38px;height:38px;flex-shrink:0;border-radius:12px;
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:19px;box-shadow:0 4px 14px rgba(102,126,234,.4);
+}
+.sb-name{font-size:15px;font-weight:700;letter-spacing:.5px}
+.sb-sub{font-size:10px;color:rgba(255,255,255,.45);margin-top:2px;letter-spacing:1px}
+.sidebar-nav{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:6px;scrollbar-width:none}
+.sidebar-nav::-webkit-scrollbar{display:none}
+.nav-item{
+  position:relative;display:flex;align-items:center;gap:12px;
+  width:100%;padding:12px 14px;border:none;background:transparent;
+  border-radius:12px;color:rgba(255,255,255,.72);
+  font-size:14px;font-weight:600;cursor:pointer;
+  transition:background .25s,color .25s,transform .25s,box-shadow .25s;
+  white-space:nowrap;text-align:left;
+}
+.nav-item:hover{background:rgba(255,255,255,.08);color:#fff;transform:translateX(3px)}
+.nav-item.active{
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  color:#fff;box-shadow:0 6px 18px rgba(102,126,234,.35);
+}
+.nav-item .ni-icon{font-size:17px;flex-shrink:0;width:24px;text-align:center}
+.nav-item .ni-label{flex:1;overflow:hidden;text-overflow:ellipsis}
+.nav-item.active::before{
+  content:'';position:absolute;left:-12px;top:50%;transform:translateY(-50%);
+  width:4px;height:60%;border-radius:4px;background:#a8b6ff;
+}
+.sidebar-footer{padding:14px;border-top:1px solid rgba(255,255,255,.08)}
+.sidebar-toggle{
+  display:flex;align-items:center;justify-content:center;gap:10px;
+  width:100%;padding:10px 0;border:1.5px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.05);border-radius:12px;
+  color:rgba(255,255,255,.7);font-size:12px;cursor:pointer;
+  transition:.25s;white-space:nowrap;
+}
+.sidebar-toggle:hover{background:rgba(255,255,255,.12);color:#fff}
+/* 折叠态（仅桌面） */
+body.sb-collapsed .sidebar{width:64px}
+body.sb-collapsed .sb-text,
+body.sb-collapsed .ni-label,
+body.sb-collapsed .st-text{display:none}
+body.sb-collapsed .sidebar-brand{justify-content:center;padding:20px 0}
+body.sb-collapsed .nav-item{justify-content:center;padding:12px 0}
+body.sb-collapsed .nav-item.active::before{left:0}
+body.sb-collapsed .st-icon{transform:rotate(180deg)}
+/* 内容区 */
+.page-shell{flex:1;min-width:0}
 /* ===== MAIN CONTENT ===== */
 .container{
   max-width:1300px;
   margin:0 auto;
   padding:40px 24px 80px;
+}
+/* 工厂视图隐藏主题相关元素 */
+body.view-factory .controls-bar,
+body.view-factory #searchWrap,
+body.view-factory .hero-nav-arrow{display:none !important}
+/* 移动端汉堡按钮 */
+.hamburger{
+  display:none;position:fixed;top:14px;left:14px;z-index:300;
+  width:44px;height:44px;border-radius:12px;border:none;
+  background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;
+  font-size:20px;cursor:pointer;align-items:center;justify-content:center;
+  box-shadow:0 6px 18px rgba(102,126,234,.4);
+}
+.sidebar-mask{
+  display:none;position:fixed;inset:0;z-index:199;
+  background:rgba(15,12,41,.55);backdrop-filter:blur(2px);
+}
+/* 移动端：侧边栏转为抽屉 */
+@media(max-width:768px){
+  body{display:block}
+  .sidebar{
+    position:fixed;left:0;top:0;height:100vh;width:240px;
+    transform:translateX(-100%);transition:transform .3s ease;
+    box-shadow:0 0 40px rgba(0,0,0,.3);
+  }
+  body.sb-collapsed .sidebar{width:240px}
+  body.sb-collapsed .sb-text,
+  body.sb-collapsed .ni-label,
+  body.sb-collapsed .st-text{display:block}
+  body.sb-collapsed .sidebar-brand{justify-content:flex-start;padding:20px 18px}
+  body.sb-collapsed .nav-item{justify-content:flex-start;padding:12px 14px}
+  body.sb-collapsed .nav-item.active::before{left:-12px}
+  body.sb-open .sidebar{transform:translateX(0)}
+  body.sb-open .sidebar-mask{display:block}
+  .hamburger{display:flex;align-items:center;justify-content:center}
 }
 
 /* ===== BRAND SECTION ===== */
@@ -555,6 +640,90 @@ body.edit-mode .add-img-btn{display:flex}
   background:#fff;
 }
 
+/* ===== 共享工厂 ===== */
+.factory-tabs-wrap{
+  display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:36px;
+}
+.f-tab{
+  padding:10px 26px;border-radius:50px;
+  border:1.5px solid #dde1f0;background:#fff;
+  color:#5a5f7a;font-size:14px;font-weight:600;cursor:pointer;
+  transition:.25s;box-shadow:0 2px 8px rgba(0,0,0,.04);
+}
+.f-tab:hover{border-color:#667eea;color:#667eea;transform:translateY(-2px)}
+.f-tab.active{
+  background:linear-gradient(135deg,#667eea,#764ba2);
+  color:#fff;border-color:transparent;
+  box-shadow:0 8px 22px rgba(102,126,234,.35);
+}
+.factory-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;
+}
+.factory-card{
+  background:#fff;border-radius:var(--radius);
+  overflow:hidden;box-shadow:0 4px 18px rgba(0,0,0,.06);
+  border:1px solid #eceef5;
+  transition:transform .35s cubic-bezier(.4,0,.2,1),box-shadow .35s;
+}
+.factory-card:hover{
+  transform:translateY(-6px);
+  box-shadow:0 16px 40px rgba(102,126,234,.18);
+}
+.fc-head{
+  display:flex;align-items:center;gap:14px;padding:22px 22px 16px;
+  background:linear-gradient(135deg,#f4f6ff,#eef1fb);
+}
+.fc-logo{
+  width:58px;height:58px;flex-shrink:0;border-radius:14px;
+  background:#fff;display:flex;align-items:center;justify-content:center;
+  font-size:28px;box-shadow:0 4px 12px rgba(0,0,0,.08);
+  overflow:hidden;
+}
+.fc-logo-img{width:100%;height:100%;object-fit:cover}
+.fc-name{font-size:16px;font-weight:700;color:#1a1a2e;line-height:1.3}
+.fc-cat{
+  display:inline-block;margin-top:6px;padding:3px 10px;border-radius:20px;
+  background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;
+  font-size:11px;font-weight:600;
+}
+.fc-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:0;
+  padding:16px 22px;
+}
+.fc-item{
+  padding:10px 0;border-bottom:1px dashed #eef0f6;
+  min-width:0;
+}
+.fc-item:nth-child(odd){padding-right:14px}
+.fc-label{
+  display:block;font-size:11px;color:#9aa0b8;margin-bottom:3px;letter-spacing:1px;
+}
+.fc-value{
+  font-size:13px;color:#33385a;font-weight:600;word-break:break-all;
+}
+.fc-desc{
+  padding:0 22px 20px;font-size:13px;color:#7a80a0;line-height:1.7;
+}
+
+/* ===== 动画效果 ===== */
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .6s ease,transform .6s cubic-bezier(.4,0,.2,1)}
+.reveal.in{opacity:1;transform:none}
+.btn-ripple{position:relative;overflow:hidden}
+.ripple-ink{
+  position:absolute;border-radius:50%;
+  background:rgba(255,255,255,.45);
+  transform:scale(0);
+  animation:ripple .55s ease-out forwards;
+  pointer-events:none;
+}
+@keyframes ripple{
+  to{transform:scale(18);opacity:0}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important}
+  .reveal{opacity:1;transform:none}
+}
+
 /* ===== RESPONSIVE ===== */
 @media(max-width:640px){
   /* ---- Hero ---- */
@@ -583,10 +752,6 @@ body.edit-mode .add-img-btn{display:flex}
   }
   .filter-btn{padding:6px 12px;font-size:12px}
   .edit-toggle{padding:6px 10px;font-size:11px}
-
-  /* ---- Theme Tabs ---- */
-  .theme-tabs{padding:8px 12px}
-  .theme-tab{padding:7px 16px;font-size:12px}
 
   /* ---- Container ---- */
   .container{padding:28px 12px 60px}
@@ -683,7 +848,6 @@ body.edit-mode .add-img-btn{display:flex}
   .gallery-track{height:160px}
   .brand-header{padding:14px 14px;border-radius:12px}
   .container{padding:20px 10px 48px}
-  .theme-tab{padding:6px 13px;font-size:11px}
   .pd-slide{min-height:220px}
   .pd-slide img{max-height:38vh}
 }
@@ -985,22 +1149,35 @@ body.edit-mode #addBrandFab{display:flex}
 </head>
 <body class="" style="">
 
-<!-- CATEGORY TABS -->
-<div class="theme-tabs" id="themeTabs">
-  <button class="theme-tab" data-theme="pet" onclick="switchTheme('pet',this)">🐾 海外宠物</button>
-  <button class="theme-tab active" data-theme="health" onclick="switchTheme('health',this)">💊 大健康</button>
-  <button class="theme-tab" data-theme="pharma" onclick="switchTheme('pharma',this)">🏥 医药</button>
-</div>
+<!-- 左侧导航栏（配置驱动，可在 NAV_ITEMS 中增改项） -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <span class="sb-logo">🧬</span>
+    <div class="sb-text">
+      <div class="sb-name">浙江齐蓁科技</div>
+      <div class="sb-sub">KRMPC · 口溶膜</div>
+    </div>
+  </div>
+  <nav class="sidebar-nav" id="sideNav"></nav>
+  <div class="sidebar-footer">
+    <button class="sidebar-toggle btn-ripple" id="sidebarToggle" onclick="toggleSidebar()" title="折叠 / 展开导航">
+      <span class="st-icon">⏴</span><span class="st-text">收起导航</span>
+    </button>
+  </div>
+</aside>
+<div class="sidebar-mask" id="sidebarMask" onclick="closeMobileSidebar()"></div>
+<div class="page-shell" id="pageShell">
+<button class="hamburger" id="hamburger" onclick="toggleMobileSidebar()" aria-label="菜单">☰</button>
 
 <!-- HERO (dynamic content rendered by JS) -->
 <header class="hero" id="heroHeader" style="background: linear-gradient(135deg, rgb(10, 46, 26), rgb(13, 92, 58), rgb(26, 139, 92));">
-    <button class="hero-nav-arrow hero-nav-prev" onclick="switchTheme('pet',null)" title="海外宠物口溶膜产品">‹</button>
+    <button class="hero-nav-arrow hero-nav-prev" onclick="switchTheme('pet',null)" title="宠物口溶膜产品">‹</button>
     <button class="hero-nav-arrow hero-nav-next" onclick="switchTheme('pharma',null)" title="医药口溶膜产品">›</button>
     <div class="hero-deco p1">💊</div>
     <div class="hero-deco p2">🌿</div>
     <div class="hero-deco p3">❤️</div>
     <div class="hero-badge">WELLNESS &amp; HEALTH · ORAL DISSOLVING STRIPS</div>
-    <h1 class="editable" contenteditable="false" style="background:linear-gradient(135deg,#fff 0%,#8ef5c0 60%,#a8f0ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">浙江齐蓁科技海内外大健康口溶膜产品案例</h1>
+    <h1 class="editable" contenteditable="false" style="background:linear-gradient(135deg,#fff 0%,#8ef5c0 60%,#a8f0ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">浙江齐蓁科技海内外大健康口溶膜</h1>
     <p class="hero-sub editable" contenteditable="false">大健康领域口溶膜（Oral Dissolving Strip）产品精选合集<br>超薄快溶 · 高效吸收 · 便捷服用 · 健康生活</p>
     <div class="hero-stats">
       <div class="hero-stat"><div class="n editable" contenteditable="false">11</div><div class="l">大健康品牌</div></div><div class="hero-stat"><div class="n editable" contenteditable="false">30+</div><div class="l">产品型号</div></div><div class="hero-stat"><div class="n editable" contenteditable="false">88+</div><div class="l">产品图片</div></div><div class="hero-stat"><div class="n editable" contenteditable="false">4</div><div class="l">应用场景</div></div>
@@ -1841,6 +2018,7 @@ body.edit-mode #addBrandFab{display:flex}
 <footer class="page-footer">
   <p>浙江齐蓁科技有限公司 · 口溶膜产品展示（宠物 / 大健康 / 医药）</p>
 </footer>
+</div><!-- /.page-shell -->
 
 <!-- Toast -->
 <div class="toast" id="toast">✅ 产品「蜂胶口腔膜」已添加！</div>
@@ -1878,7 +2056,7 @@ function renderAll() {
 
     // section
     const sec = document.createElement('section');
-    sec.className = 'brand-section visible';
+    sec.className = 'brand-section visible reveal';
     sec.id = 'brand-' + brand.id;
 
     const icon = brand.icon || '🐾';
@@ -1911,11 +2089,12 @@ function renderAll() {
     addProd.onclick=()=>addProduct(brand.id);
     sec.appendChild(addProd);
   });
+  initReveal();
 }
 
 function renderProduct(brand, prod, pi) {
   const card = document.createElement('div');
-  card.className = 'product-card';
+  card.className = 'product-card reveal';
   const imgs = prod.b64_images || [];
   const hasMultiple = imgs.length > 1;
 
@@ -2120,7 +2299,7 @@ document.addEventListener('keydown',e=>{
 // ===== THEME SYSTEM =====
 const THEMES = {
   pet: {
-    title: '浙江齐蓁科技海内外宠物口溶膜产品案例',
+    title: '浙江齐蓁科技海内外大宠物口溶膜',
     badge: 'GLOBAL PET HEALTH · ORAL DISSOLVING STRIPS',
     subtitle: '全球领先的宠物口溶膜（Oral Dissolving Strip）产品精选合集<br>收录6大品牌 · 超薄快溶 · 高效吸收 · 无应激喂服',
     stats: [
@@ -2133,7 +2312,7 @@ const THEMES = {
     decos: ['🐾','🐾','🐾']
   },
   health: {
-    title: '浙江齐蓁科技海内外大健康口溶膜产品案例',
+    title: '浙江齐蓁科技海内外大健康口溶膜',
     badge: 'WELLNESS & HEALTH · ORAL DISSOLVING STRIPS',
     subtitle: '大健康领域口溶膜（Oral Dissolving Strip）产品精选合集<br>超薄快溶 · 高效吸收 · 便捷服用 · 健康生活',
     stats: [
@@ -2146,7 +2325,7 @@ const THEMES = {
     decos: ['💊','🌿','❤️']
   },
   pharma: {
-    title: '浙江齐蓁科技海内外医药口溶膜产品案例',
+    title: '浙江齐蓁科技海内外医药口溶膜',
     badge: 'PHARMACEUTICAL · ORAL DISSOLVING STRIPS',
     subtitle: '医药领域口溶膜（Oral Dissolving Strip）产品精选合集<br>超薄快溶 · 精准给药 · 快速起效 · 临床验证',
     stats: [
@@ -2160,13 +2339,175 @@ const THEMES = {
   }
 };
 let currentTheme = 'health';
+let currentView = 'theme'; // 'theme' | 'factory'
+
+// ===== SIDEBAR NAV (配置驱动：新增板块只需在此追加一项) =====
+const NAV_ITEMS = [
+  {key:'pet',     label:'宠物',     icon:'🐾', type:'theme'},
+  {key:'health',  label:'大健康',   icon:'💊', type:'theme'},
+  {key:'pharma',  label:'医药',     icon:'🏥', type:'theme'},
+  {key:'factory', label:'共享工厂', icon:'🏭', type:'view'}
+];
+
+function renderNav() {
+  const nav = document.getElementById('sideNav');
+  nav.innerHTML = NAV_ITEMS.map(function(item) {
+    const active = (item.type === 'theme' && item.key === currentTheme && currentView === 'theme') ||
+                   (item.type === 'view' && currentView === 'factory');
+    const click = item.type === 'theme' ? `switchTheme('${item.key}', this)` : 'showFactoryView(this)';
+    return `<button class="nav-item btn-ripple${active ? ' active' : ''}" data-theme="${item.type === 'theme' ? item.key : ''}" data-view="${item.type === 'view' ? 'factory' : ''}" onclick="${click}">
+      <span class="ni-icon">${item.icon}</span><span class="ni-label">${item.label}</span>
+    </button>`;
+  }).join('');
+}
+
+function initSidebar() {
+  var saved = 'full';
+  try { saved = localStorage.getItem('krmcpc_sidebar') || 'full'; } catch(e) {}
+  if (saved === 'collapsed' && window.innerWidth > 768) {
+    document.body.classList.add('sb-collapsed');
+    const stIcon = document.querySelector('.st-icon'), stText = document.querySelector('.st-text');
+    if (stIcon) stIcon.textContent = '⏵';
+    if (stText) stText.textContent = '展开导航';
+  }
+  renderNav();
+}
+function toggleSidebar() {
+  const collapsed = document.body.classList.toggle('sb-collapsed');
+  const stIcon = document.querySelector('.st-icon'), stText = document.querySelector('.st-text');
+  if (stIcon) stIcon.textContent = collapsed ? '⏵' : '⏴';
+  if (stText) stText.textContent = collapsed ? '展开导航' : '收起导航';
+  try { localStorage.setItem('krmcpc_sidebar', collapsed ? 'collapsed' : 'full'); } catch(e) {}
+}
+function toggleMobileSidebar() { document.body.classList.toggle('sb-open'); }
+function closeMobileSidebar() { document.body.classList.remove('sb-open'); }
+
+// ===== 共享工厂视图 =====
+// 静态兜底数据（云函数返回 factories 集合后会覆盖）
+var FACTORIES = [
+  {name:'示例·宠物口溶膜CRO工厂', category:'宠物', scale:'200人 · 年产能5亿片', capital:'5000万人民币', productType:'宠物保健品口溶膜', region:'中国 浙江', logo:'', description:'支持宠物口溶膜配方开发、中试放大与批量生产（示例数据，可在后台替换）', order:1},
+  {name:'示例·大健康CRO工厂', category:'大健康', scale:'350人 · 年产能12亿片', capital:'1亿人民币', productType:'维生素/益生菌口溶膜', region:'中国 江苏', logo:'', description:'支持大健康营养口溶膜委托研发（CRO）与生产（示例数据，可在后台替换）', order:2},
+  {name:'示例·医药CRO工厂', category:'医药', scale:'500人 · GMP车间', capital:'2亿人民币', productType:'医药口溶膜 CDMO', region:'中国 山东', logo:'', description:'支持医药口溶膜临床前研究与CDMO生产（示例数据，可在后台替换）', order:3}
+];
+var factoryCategory = '宠物';
+
+function showFactoryView(btn) {
+  currentView = 'factory';
+  document.body.classList.add('view-factory');
+  // 更新导航高亮
+  document.querySelectorAll('.nav-item').forEach(function(t){ t.classList.remove('active'); });
+  const target = btn || document.querySelector('.nav-item[data-view="factory"]');
+  if (target) target.classList.add('active');
+  // 渲染工厂专属 hero
+  const hero = document.getElementById('heroHeader');
+  const n = FACTORIES.length;
+  hero.innerHTML = `
+    <div class="hero-deco p1">🏭</div>
+    <div class="hero-deco p2">⚙️</div>
+    <div class="hero-deco p3">🤝</div>
+    <div class="hero-badge">SHARED FACTORY · CRO SERVICES</div>
+    <h1 class="editable" contenteditable="false" style="background:linear-gradient(135deg,#fff 0%,#c9d2ff 60%,#e6c6ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">浙江齐蓁科技共享工厂</h1>
+    <p class="hero-sub">支持 CRO 委托研发与生产的合作伙伴工厂<br>宠物 · 大健康 · 医药 全品类覆盖</p>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="n">${n}</div><div class="l">合作工厂</div></div>
+      <div class="hero-stat"><div class="n">3</div><div class="l">覆盖领域</div></div>
+      <div class="hero-stat"><div class="n">CRO</div><div class="l">服务模式</div></div>
+    </div>
+    <svg class="hero-wave" viewBox="0 0 1440 60" preserveAspectRatio="none" fill="#f4f6fa"><path d="M0,40 C360,80 1080,0 1440,40 L1440,60 L0,60 Z"/></svg>
+  `;
+  hero.style.background = 'linear-gradient(135deg,#3f3d8f,#667eea,#764ba2)';
+  // 渲染工厂列表
+  renderFactories();
+  requestAnimationFrame(function(){ protectImages(); initReveal(); });
+  if (window.innerWidth <= 768) closeMobileSidebar();
+}
+
+function renderFactories() {
+  const main = document.getElementById('mainContainer');
+  const list = FACTORIES.filter(function(f){ return f.category === factoryCategory; })
+    .sort(function(a,b){ return (a.order || 99) - (b.order || 99); });
+  const tabs = ['宠物','大健康','医药'].map(function(c){
+    return `<button class="f-tab btn-ripple${c === factoryCategory ? ' active' : ''}" onclick="filterFactory('${c}',this)">${c === '宠物' ? '🐾' : c === '大健康' ? '💊' : '🏥'} ${c}</button>`;
+  }).join('');
+  const cards = list.map(function(f){
+    const logo = f.logo ? `<img class="fc-logo-img" src="${f.logo}" alt="${f.name}">` : '<span class="fc-logo-ph">🏭</span>';
+    return `<div class="factory-card reveal">
+      <div class="fc-head">
+        <div class="fc-logo">${logo}</div>
+        <div class="fc-info">
+          <div class="fc-name">${f.name}</div>
+          <span class="fc-cat">${f.category} · CRO</span>
+        </div>
+      </div>
+      <div class="fc-grid">
+        <div class="fc-item"><span class="fc-label">规模</span><span class="fc-value">${f.scale || '-'}</span></div>
+        <div class="fc-item"><span class="fc-label">注册资金</span><span class="fc-value">${f.capital || '-'}</span></div>
+        <div class="fc-item"><span class="fc-label">产品类型</span><span class="fc-value">${f.productType || '-'}</span></div>
+        <div class="fc-item"><span class="fc-label">地区</span><span class="fc-value">${f.region || '-'}</span></div>
+      </div>
+      ${f.description ? `<div class="fc-desc">${f.description}</div>` : ''}
+    </div>`;
+  }).join('');
+  main.innerHTML = `
+    <div class="factory-tabs-wrap">${tabs}</div>
+    ${cards ? `<div class="factory-grid">${cards}</div>` : '<div class="snr-icon">🏭</div><div style="text-align:center;color:#999;padding:40px 0">该分类暂无工厂信息</div>'}
+  `;
+  // 重新绑定滚动显现与图片保护（切分类后新元素需重新观察）
+  requestAnimationFrame(function(){ initReveal(); protectImages(); });
+}
+
+function filterFactory(cat, btn) {
+  factoryCategory = cat;
+  document.querySelectorAll('.f-tab').forEach(function(t){ t.classList.remove('active'); });
+  if (btn) btn.classList.add('active');
+  renderFactories();
+}
+
+// ===== SCROLL REVEAL (滚动显现动画) =====
+function initReveal() {
+  var els = document.querySelectorAll('.reveal:not(.in)');
+  if (!('IntersectionObserver' in window)) {
+    els.forEach(function(el){ el.classList.add('in'); });
+    return;
+  }
+  if (!window._revealObserver) {
+    window._revealObserver = new IntersectionObserver(function(entries) {
+      entries.forEach(function(en) {
+        if (en.isIntersecting) {
+          en.target.classList.add('in');
+          window._revealObserver.unobserve(en.target);
+        }
+      });
+    }, {threshold: 0.1, rootMargin: '0px 0px -40px 0px'});
+  }
+  els.forEach(function(el){ window._revealObserver.observe(el); });
+}
+
+// ===== CLICK RIPPLE (按钮点击涟漪) =====
+document.addEventListener('click', function(e) {
+  var btn = e.target.closest('.btn-ripple');
+  if (!btn) return;
+  var rect = btn.getBoundingClientRect();
+  var size = Math.max(rect.width, rect.height);
+  var ink = document.createElement('span');
+  ink.className = 'ripple-ink';
+  ink.style.width = ink.style.height = size + 'px';
+  ink.style.left = (e.clientX - rect.left - size / 2) + 'px';
+  ink.style.top = (e.clientY - rect.top - size / 2) + 'px';
+  btn.appendChild(ink);
+  setTimeout(function(){ ink.remove(); }, 600);
+});
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.add('btn-ripple'); });
+});
 
 function switchTheme(key, tabBtn) {
-  if(currentTheme === key) return;
   currentTheme = key;
-  // update tabs
-  document.querySelectorAll('.theme-tab').forEach(t=>t.classList.remove('active'));
-  const target = tabBtn || document.querySelector(`.theme-tab[data-theme="${key}"]`);
+  currentView = 'theme';
+  document.body.classList.remove('view-factory');
+  // update nav active
+  document.querySelectorAll('.nav-item').forEach(function(t){ t.classList.remove('active'); });
+  const target = tabBtn || document.querySelector(`.nav-item[data-theme="${key}"]`);
   if(target) target.classList.add('active');
   // Full re-render for theme isolation
   renderHero();
@@ -2176,10 +2517,12 @@ function switchTheme(key, tabBtn) {
     updateHeroStats();
     // Image protection
     protectImages();
+    initReveal();
   });
   if(document.body.classList.contains('edit-mode')) {
     doToggleEdit(true);
   }
+  if (window.innerWidth <= 768) closeMobileSidebar();
 }
 
 // Update hero stats from actual current theme data count
@@ -2223,11 +2566,13 @@ function renderHero() {
 
 // init hero on load - ensure stats are updated after all DOM is ready
 document.addEventListener('DOMContentLoaded', function(){
+  initSidebar();
   renderHero();
   // 先用静态数据渲染，再异步加载云数据覆盖
   requestAnimationFrame(function(){
     updateHeroStats();
     protectImages();
+    initReveal();
   });
   // 异步加载云数据库数据（admin后台编辑的数据）
   loadCloudData();
@@ -2251,6 +2596,25 @@ async function loadCloudData() {
     var data = result.data || result;
     var cloudBrands = data.brands || [];
     var cloudProducts = data.products || [];
+    // 共享工厂云数据（云函数支持 factories 集合时覆盖静态数据）
+    if (data.factories && data.factories.length) {
+      FACTORIES = data.factories.map(function(f){
+        return {
+          name: f.name || '',
+          category: f.category || '宠物',
+          scale: f.scale || '',
+          capital: f.capital || '',
+          productType: f.productType || '',
+          region: f.region || '',
+          logo: (f.logo || f.images && f.images[0]) || '',
+          description: f.description || '',
+          order: f.order || 99
+        };
+      });
+      if (currentView === 'factory') {
+        showFactoryView(null);
+      }
+    }
     if (cloudBrands.length === 0) {
       console.log('No cloud brands found, using static data');
       return;
@@ -2261,11 +2625,13 @@ async function loadCloudData() {
       THEME_BRANDS.pet = mapped.pet;
       THEME_BRANDS.health = mapped.health;
       THEME_BRANDS.pharma = mapped.pharma;
-      // 重新渲染
-      renderAll();
-      updateHeroStats();
-      // 重新绑定图片保护
-      setTimeout(protectImages, 100);
+      // 重新渲染（仅主题视图时）
+      if (currentView === 'theme') {
+        renderAll();
+        updateHeroStats();
+        // 重新绑定图片保护
+        setTimeout(protectImages, 100);
+      }
       console.log('Cloud data loaded: ' + (mapped.pet.length + mapped.health.length + mapped.pharma.length) + ' brands');
     }
   } catch(e) {
@@ -2462,9 +2828,12 @@ function doToggleEdit(on) {
 let _addImgTarget = null;
 function triggerAddImg(btn) {
   _addImgTarget = btn.closest('.card-body').previousElementSibling; // .gallery
-  document.getElementById('fileInput').click();
+  const el = document.getElementById('fileInput');
+  if (el) el.click();
 }
-document.getElementById('fileInput').addEventListener('change', function() {
+// 仅当编辑模式注入 fileInput 元素时绑定（防御空引用）
+const _fileInputEl = document.getElementById('fileInput');
+if (_fileInputEl) _fileInputEl.addEventListener('change', function() {
   const files = Array.from(this.files);
   if(!files.length||!_addImgTarget) return;
   let processedCount = 0;
@@ -2736,7 +3105,8 @@ function openAddProductModal(brandId){
 }
 
 // image picker for add product
-document.getElementById('imgUploadInput').addEventListener('change', function(){
+const _imgUploadInput = document.getElementById('imgUploadInput');
+if (_imgUploadInput) _imgUploadInput.addEventListener('change', function(){
   Array.from(this.files).forEach(file=>{
     const reader = new FileReader();
     reader.onload = e=>{
@@ -3243,7 +3613,7 @@ function doImport() {
     bar.insertBefore(fbtn, document.getElementById('editToggle'));
 
     const sec = document.createElement('section');
-    sec.className = 'brand-section visible'; sec.id = 'brand-' + brand.id;
+    sec.className = 'brand-section visible reveal'; sec.id = 'brand-' + brand.id;
     sec.innerHTML = `
       <div class="brand-header" id="bh-${brand.id}" style="background:linear-gradient(135deg,${brand.color},${brand.accent})">
         <div class="brand-icon" id="bi-${brand.id}">${brand.icon}</div>
