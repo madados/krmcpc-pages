@@ -215,9 +215,9 @@ tr:hover{background:#f8f9fb}
       <div style="overflow-x:auto"><table id="productTable"><thead><tr><th>产品名称</th><th>品牌</th><th>功效</th><th>图片</th><th>操作</th></tr></thead><tbody id="productTableBody"></tbody></table></div>
     </div>
 
-    <!-- 共享工厂管理 -->
+    <!-- 工厂推荐管理 -->
     <div class="section">
-      <h2>共享工厂管理（CRO 服务）
+      <h2>工厂推荐管理（共享工厂 / CRO工厂）
         <button class="btn btn-primary" onclick="openFactoryForm('add')">+ 添加工厂</button>
       </h2>
       <div id="factoryForm" style="display:none;margin-bottom:20px;padding:16px;background:#f8f9fa;border-radius:8px">
@@ -225,12 +225,13 @@ tr:hover{background:#f8f9fb}
         <input type="hidden" id="f_editId" value="">
         <div class="form-row">
           <div class="form-group"><label>工厂名称 *</label><input id="f_name" placeholder="如某某生物科技"></div>
+          <div class="form-group"><label>类型 *</label><select id="f_type"><option value="CRO工厂">CRO工厂</option><option value="共享工厂">共享工厂</option></select></div>
           <div class="form-group"><label>分类 *</label><select id="f_category"><option value="宠物">宠物</option><option value="大健康">大健康</option><option value="医药">医药</option></select></div>
-          <div class="form-group"><label>排序</label><input id="f_order" type="number" value="99"></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>规模</label><input id="f_scale" placeholder="如300人 · 年产能10亿片"></div>
           <div class="form-group"><label>注册资金</label><input id="f_capital" placeholder="如5000万人民币"></div>
+          <div class="form-group"><label>排序</label><input id="f_order" type="number" value="99"></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>产品类型</label><input id="f_productType" placeholder="如宠物保健品口溶膜"></div>
@@ -256,7 +257,7 @@ tr:hover{background:#f8f9fb}
         </div>
       </div>
 
-      <div style="overflow-x:auto"><table id="factoryTable"><thead><tr><th>排序</th><th>名称</th><th>分类</th><th>规模</th><th>注册资金</th><th>产品类型</th><th>地区</th><th>图片</th><th>操作</th></tr></thead><tbody id="factoryTableBody"></tbody></table></div>
+      <div style="overflow-x:auto"><table id="factoryTable"><thead><tr><th>排序</th><th>名称</th><th>类型</th><th>分类</th><th>规模</th><th>注册资金</th><th>产品类型</th><th>地区</th><th>图片</th><th>操作</th></tr></thead><tbody id="factoryTableBody"></tbody></table></div>
     </div>
   </div>
 </div>
@@ -756,6 +757,7 @@ function renderFactories() {
     return '<tr data-doc-id="' + f._id + '">' +
       '<td>' + (idx+1) + '</td>' +
       '<td>' + esc(f.name) + '</td>' +
+      '<td>' + esc(f.type || 'CRO工厂') + '</td>' +
       '<td>' + esc(f.category || '-') + '</td>' +
       '<td>' + esc(f.scale || '-') + '</td>' +
       '<td>' + esc(f.capital || '-') + '</td>' +
@@ -781,6 +783,7 @@ function openFactoryForm(mode, docId) {
     document.getElementById('factoryFormTitle').classList.add('show');
     document.getElementById('f_editId').value = docId;
     document.getElementById('f_name').value = f.name || '';
+    document.getElementById('f_type').value = f.type || 'CRO工厂';
     document.getElementById('f_category').value = f.category || '宠物';
     document.getElementById('f_scale').value = f.scale || '';
     document.getElementById('f_capital').value = f.capital || '';
@@ -809,9 +812,10 @@ function closeFactoryForm() {
 }
 
 function clearFactoryForm() {
-  ['f_name','f_category','f_scale','f_capital','f_productType','f_region','f_description','f_images','f_order','f_editId'].forEach(function(id){
+  ['f_name','f_type','f_category','f_scale','f_capital','f_productType','f_region','f_description','f_images','f_order','f_editId'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
+  var ft = document.getElementById('f_type'); if (ft) ft.value = 'CRO工厂';
   document.getElementById('f_imagePreview').innerHTML = '';
   document.getElementById('f_progressBar').classList.remove('show');
   document.getElementById('f_progressFill').style.width = '0%';
@@ -826,6 +830,7 @@ async function saveFactory() {
   var images = pendingUploads.filter(function(p) { return p.status === 'done' && p.url; }).map(function(p) { return p.url; });
   var data = {
     name: name,
+    type: document.getElementById('f_type').value,
     category: document.getElementById('f_category').value,
     scale: document.getElementById('f_scale').value.trim(),
     capital: document.getElementById('f_capital').value.trim(),
