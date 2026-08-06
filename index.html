@@ -721,6 +721,23 @@ body.edit-mode .add-img-btn{display:flex}
 .fc-desc{
   padding:0 22px 20px;font-size:13px;color:#7a80a0;line-height:1.7;
 }
+.factory-section{margin-bottom:48px}
+.factory-section-title{
+  display:flex;align-items:center;gap:12px;
+  font-size:20px;font-weight:700;color:#1a1a2e;margin-bottom:22px;
+}
+.factory-section-title .fst-line{
+  width:6px;height:22px;border-radius:4px;
+  background:linear-gradient(180deg,#667eea,#764ba2);
+}
+.factory-section-title .fst-count{
+  font-size:12px;font-weight:500;color:#9aa0b8;
+  background:#f0f2fb;padding:3px 10px;border-radius:20px;
+}
+.factory-empty{
+  text-align:center;color:#b0b5cc;font-size:13px;
+  padding:36px 20px;background:#fafbfe;border:1.5px dashed #e2e6f0;border-radius:16px;
+}
 
 /* ===== 动画效果 ===== */
 .reveal{opacity:0;transform:translateY(26px);transition:opacity .6s ease,transform .6s cubic-bezier(.4,0,.2,1)}
@@ -736,6 +753,28 @@ body.edit-mode .add-img-btn{display:flex}
 @keyframes ripple{
   to{transform:scale(18);opacity:0}
 }
+/* 加载态 */
+.loading-wrap{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:80px 20px;min-height:30vh;
+}
+.loading-spinner{
+  width:42px;height:42px;border-radius:50%;
+  border:4px solid #e4e8f5;border-top-color:#667eea;
+  animation:spin 1s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{margin-top:16px;color:#999;font-size:13px}
+/* 分页 */
+.pagination{display:flex;justify-content:center;align-items:center;gap:8px;margin:8px 0 20px;flex-wrap:wrap}
+.pg-btn,.pg-num{
+  min-width:38px;height:38px;padding:0 14px;border-radius:10px;
+  border:1.5px solid #e2e6f0;background:#fff;color:#5a5f7a;
+  font-size:13px;font-weight:600;cursor:pointer;transition:.2s;
+}
+.pg-btn:hover:not(:disabled),.pg-num:hover:not(.active){border-color:#667eea;color:#667eea}
+.pg-num.active{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-color:transparent}
+.pg-btn:disabled{opacity:.4;cursor:not-allowed}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
   .reveal{opacity:1;transform:none}
@@ -2072,6 +2111,12 @@ const BRANDS = null; // DISABLED – use getBrands()
 const _defaultIcons = {'petpax':'🐶','nelm':'🦷','zoeuticals':'💊','meltail':'🐱','furlicks':'🌿','heartland':'🏥'};
 /* per-theme icon backfill handled in renderAll via getBrands() */;
 
+// ===== 分页与筛选状态 =====
+const BRANDS_PER_PAGE = 4;
+var brandPage = 1;
+var brandFilter = 'all';
+var _activeSearch = '';
+
 function renderAll() {
   const bar = document.getElementById('controlsBar');
   const main = document.getElementById('mainContainer');
@@ -2080,15 +2125,30 @@ function renderAll() {
   // Remove existing brand filter buttons (keep fixed ones)
   bar.querySelectorAll('.filter-btn[data-brand]').forEach(b => b.remove());
 
-  getBrands().forEach(brand => {
-    // filter button
+  const allBrands = getBrands() || [];
+  // 重建品牌筛选按钮并同步 active 态
+  allBrands.forEach(brand => {
     const btn = document.createElement('button');
-    btn.className = 'filter-btn';
+    btn.className = 'filter-btn' + (brandFilter === brand.id ? ' active' : '');
     btn.textContent = brand.name;
     btn.onclick = function(){ filterBrand(brand.id, this); };
     btn.setAttribute('data-brand', brand.id);
     bar.insertBefore(btn, document.getElementById('editToggle'));
+  });
+  bar.querySelectorAll('.filter-btn').forEach(b => {
+    const bid = b.getAttribute('data-brand');
+    b.classList.toggle('active', bid ? brandFilter === bid : brandFilter === 'all');
+  });
 
+  // 筛选 + 分页（搜索时展示全部品牌不分页）
+  let filtered = brandFilter === 'all' ? allBrands.slice() : allBrands.filter(b => b.id === brandFilter);
+  const noPage = _activeSearch !== '';
+  const totalPages = noPage ? 1 : Math.max(1, Math.ceil(filtered.length / BRANDS_PER_PAGE));
+  if (brandPage > totalPages) brandPage = totalPages;
+  if (brandPage < 1) brandPage = 1;
+  const pageBrands = noPage ? filtered : filtered.slice((brandPage - 1) * BRANDS_PER_PAGE, brandPage * BRANDS_PER_PAGE);
+
+  pageBrands.forEach(brand => {
     // section
     const sec = document.createElement('section');
     sec.className = 'brand-section visible reveal';
@@ -2124,7 +2184,34 @@ function renderAll() {
     addProd.onclick=()=>addProduct(brand.id);
     sec.appendChild(addProd);
   });
+
+  // 分页栏
+  if (!noPage && totalPages > 1) {
+    main.appendChild(renderPagination(totalPages));
+  }
   initReveal();
+}
+
+function renderPagination(totalPages) {
+  const wrap = document.createElement('div');
+  wrap.className = 'pagination';
+  let html = `<button class="pg-btn" onclick="goToPage(${brandPage - 1})"${brandPage <= 1 ? ' disabled' : ''}>‹ 上一页</button>`;
+  for (let i = 1; i <= totalPages; i++) {
+    html += `<button class="pg-num${i === brandPage ? ' active' : ''}" onclick="goToPage(${i})">${i}</button>`;
+  }
+  html += `<button class="pg-btn" onclick="goToPage(${brandPage + 1})"${brandPage >= totalPages ? ' disabled' : ''}>下一页 ›</button>`;
+  wrap.innerHTML = html;
+  return wrap;
+}
+
+function goToPage(n) {
+  const all = getBrands() || [];
+  const filtered = brandFilter === 'all' ? all.slice() : all.filter(b => b.id === brandFilter);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / BRANDS_PER_PAGE));
+  if (n < 1 || n > totalPages) return;
+  brandPage = n;
+  renderAll();
+  window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
 function renderProduct(brand, prod, pi) {
@@ -2390,7 +2477,7 @@ const NAV_ITEMS = [
   {key:'pet',     label:'宠物',     icon:'🐾', type:'theme'},
   {key:'health',  label:'大健康',   icon:'💊', type:'theme'},
   {key:'pharma',  label:'医药',     icon:'🏥', type:'theme'},
-  {key:'factory', label:'共享工厂', icon:'🏭', type:'view'}
+  {key:'factory', label:'工厂推荐', icon:'🏭', type:'view'}
 ];
 
 function renderNav() {
@@ -2429,11 +2516,11 @@ function closeMobileSidebar() { document.body.classList.remove('sb-open'); }
 // ===== 共享工厂视图 =====
 // 静态兜底数据（云函数返回 factories 集合后会覆盖）
 var FACTORIES = [
-  {name:'示例·宠物口溶膜CRO工厂', category:'宠物', scale:'200人 · 年产能5亿片', capital:'5000万人民币', productType:'宠物保健品口溶膜', region:'中国 浙江', logo:'', description:'支持宠物口溶膜配方开发、中试放大与批量生产（示例数据，可在后台替换）', order:1},
-  {name:'示例·大健康CRO工厂', category:'大健康', scale:'350人 · 年产能12亿片', capital:'1亿人民币', productType:'维生素/益生菌口溶膜', region:'中国 江苏', logo:'', description:'支持大健康营养口溶膜委托研发（CRO）与生产（示例数据，可在后台替换）', order:2},
-  {name:'示例·医药CRO工厂', category:'医药', scale:'500人 · GMP车间', capital:'2亿人民币', productType:'医药口溶膜 CDMO', region:'中国 山东', logo:'', description:'支持医药口溶膜临床前研究与CDMO生产（示例数据，可在后台替换）', order:3}
+  {name:'示例·宠物口溶膜CRO工厂', type:'CRO工厂', category:'宠物', scale:'200人 · 年产能5亿片', capital:'5000万人民币', productType:'宠物保健品口溶膜', region:'中国 浙江', logo:'', description:'支持宠物口溶膜配方开发、中试放大与批量生产（示例数据，可在后台替换）', order:1},
+  {name:'示例·大健康CRO工厂', type:'CRO工厂', category:'大健康', scale:'350人 · 年产能12亿片', capital:'1亿人民币', productType:'维生素/益生菌口溶膜', region:'中国 江苏', logo:'', description:'支持大健康营养口溶膜委托研发（CRO）与生产（示例数据，可在后台替换）', order:2},
+  {name:'示例·医药口溶膜CRO工厂', type:'CRO工厂', category:'医药', scale:'500人 · GMP车间', capital:'2亿人民币', productType:'医药口溶膜 CDMO', region:'中国 山东', logo:'', description:'支持医药口溶膜临床前研究与CDMO生产（示例数据，可在后台替换）', order:3},
+  {name:'示例·共享制造基地', type:'共享工厂', category:'大健康', scale:'120人 · 共享产线4条', capital:'3000万人民币', productType:'通用口溶膜共享产线', region:'中国 广东', logo:'', description:'开放共享产线与检验设备，支持中小品牌轻资产起步（示例数据，可在后台替换）', order:4}
 ];
-var factoryCategory = '宠物';
 
 function showFactoryView(btn) {
   currentView = 'factory';
@@ -2450,7 +2537,7 @@ function showFactoryView(btn) {
     <div class="hero-deco p2">⚙️</div>
     <div class="hero-deco p3">🤝</div>
     <div class="hero-badge">SHARED FACTORY · CRO SERVICES</div>
-    <h1 class="editable" contenteditable="false" style="background:linear-gradient(135deg,#fff 0%,#c9d2ff 60%,#e6c6ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">浙江齐蓁科技共享工厂</h1>
+    <h1 class="editable" contenteditable="false" style="background:linear-gradient(135deg,#fff 0%,#c9d2ff 60%,#e6c6ff 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">齐蓁科技合作客户工厂推荐</h1>
     <p class="hero-sub">支持 CRO 委托研发与生产的合作伙伴工厂<br>宠物 · 大健康 · 医药 全品类覆盖</p>
     <div class="hero-stats">
       <div class="hero-stat"><div class="n">${n}</div><div class="l">合作工厂</div></div>
@@ -2468,15 +2555,18 @@ function showFactoryView(btn) {
 
 function renderFactories() {
   const main = document.getElementById('mainContainer');
-  const list = FACTORIES.slice().sort(function(a,b){ return (a.order || 99) - (b.order || 99); });
-  const cards = list.map(function(f){
+  const all = FACTORIES.slice().sort(function(a,b){ return (a.order || 99) - (b.order || 99); });
+  const shared = all.filter(function(f){ return (f.type || 'CRO工厂') === '共享工厂'; });
+  const cro = all.filter(function(f){ return (f.type || 'CRO工厂') === 'CRO工厂'; });
+
+  const cardHtml = function(f){
     const logo = f.logo ? `<img class="fc-logo-img" src="${f.logo}" alt="${f.name}">` : '<span class="fc-logo-ph">🏭</span>';
     return `<div class="factory-card reveal">
       <div class="fc-head">
         <div class="fc-logo">${logo}</div>
         <div class="fc-info">
           <div class="fc-name">${f.name}</div>
-          <span class="fc-cat">${f.category} · CRO</span>
+          <span class="fc-cat">${f.type || 'CRO工厂'} · ${f.category || ''}</span>
         </div>
       </div>
       <div class="fc-grid">
@@ -2487,8 +2577,19 @@ function renderFactories() {
       </div>
       ${f.description ? `<div class="fc-desc">${f.description}</div>` : ''}
     </div>`;
-  }).join('');
-  main.innerHTML = cards ? `<div class="factory-grid">${cards}</div>` : '<div class="snr-icon">🏭</div><div style="text-align:center;color:#999;padding:40px 0">暂无工厂信息</div>';
+  };
+
+  const section = function(title, list){
+    const cards = list.map(cardHtml).join('');
+    const body = cards ? `<div class="factory-grid">${cards}</div>` : '<div class="factory-empty">该板块暂无工厂，可在后台“工厂推荐管理”中添加</div>';
+    return `<div class="factory-section reveal">
+      <div class="factory-section-title"><span class="fst-line"></span>${title}<span class="fst-count">${list.length} 家</span></div>
+      ${body}
+    </div>`;
+  };
+
+  const html = section('共享工厂', shared) + section('CRO工厂', cro);
+  main.innerHTML = html;
   // 重新绑定滚动显现与图片保护
   requestAnimationFrame(function(){ initReveal(); protectImages(); });
 }
@@ -2535,6 +2636,10 @@ function switchTheme(key, tabBtn) {
   currentTheme = key;
   currentView = 'theme';
   document.body.classList.remove('view-factory');
+  // 重置筛选/分页/搜索状态
+  brandFilter = 'all';
+  brandPage = 1;
+  _activeSearch = '';
   // update nav active
   document.querySelectorAll('.nav-item').forEach(function(t){ t.classList.remove('active'); });
   const target = tabBtn || document.querySelector(`.nav-item[data-theme="${key}"]`);
@@ -2594,16 +2699,34 @@ function renderHero() {
   `;
 }
 
+// 全局渲染状态：避免“先显示无序静态内容、再被云数据刷新”的闪变
+var _cloudRendered = false;
+var _cloudFallbackTimer = null;
+
+function showContentLoading() {
+  const main = document.getElementById('mainContainer');
+  main.innerHTML = '<div class="loading-wrap"><div class="loading-spinner"></div><div class="loading-text">正在加载产品数据…</div></div>';
+}
+
 // init hero on load - ensure stats are updated after all DOM is ready
 document.addEventListener('DOMContentLoaded', function(){
   initSidebar();
   renderHero();
-  // 先用静态数据渲染，再异步加载云数据覆盖
   requestAnimationFrame(function(){
     updateHeroStats();
     protectImages();
-    initReveal();
   });
+  // 先显示加载态，等云数据返回后按 order 渲染，避免“先显示无序内容再刷新”的闪变
+  showContentLoading();
+  // 云数据超时兜底（3.5s 未返回则用静态数据渲染）
+  _cloudFallbackTimer = setTimeout(function(){
+    if (!_cloudRendered) {
+      _cloudRendered = true;
+      renderAll();
+      updateHeroStats();
+      setTimeout(protectImages, 100);
+    }
+  }, 3500);
   // 异步加载云数据库数据（admin后台编辑的数据）
   loadCloudData();
 });
@@ -2621,6 +2744,7 @@ async function loadCloudData() {
     var result = await res.json();
     if (!result || !result.success) {
       console.log('Cloud data unavailable, using static data');
+      if (!_cloudRendered) { _cloudRendered = true; renderAll(); updateHeroStats(); setTimeout(protectImages, 100); }
       return;
     }
     var data = result.data || result;
@@ -2631,6 +2755,7 @@ async function loadCloudData() {
       FACTORIES = data.factories.map(function(f){
         return {
           name: f.name || '',
+          type: f.type || 'CRO工厂',
           category: f.category || '宠物',
           scale: f.scale || '',
           capital: f.capital || '',
@@ -2647,6 +2772,7 @@ async function loadCloudData() {
     }
     if (cloudBrands.length === 0) {
       console.log('No cloud brands found, using static data');
+      if (!_cloudRendered) { _cloudRendered = true; renderAll(); updateHeroStats(); setTimeout(protectImages, 100); }
       return;
     }
     // 将云数据映射为前台 THEME_BRANDS 格式
@@ -2657,6 +2783,7 @@ async function loadCloudData() {
       THEME_BRANDS.pharma = mapped.pharma;
       // 重新渲染（仅主题视图时）
       if (currentView === 'theme') {
+        _cloudRendered = true;
         renderAll();
         updateHeroStats();
         // 重新绑定图片保护
@@ -2666,6 +2793,7 @@ async function loadCloudData() {
     }
   } catch(e) {
     console.log('Cloud load failed, using static data:', e.message);
+    if (!_cloudRendered) { _cloudRendered = true; renderAll(); updateHeroStats(); setTimeout(protectImages, 100); }
   }
 }
 
@@ -2778,12 +2906,12 @@ function protectImages() {
 
 // ===== FILTER =====
 function filterBrand(id, btn) {
+  brandFilter = id;
+  brandPage = 1;
   document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  document.querySelectorAll('.brand-section').forEach(sec=>{
-    if(id==='all' || sec.id==='brand-'+id) sec.classList.add('visible');
-    else sec.classList.remove('visible');
-  });
+  if (btn) btn.classList.add('active');
+  renderAll();
+  if (window.innerWidth <= 768) closeMobileSidebar();
 }
 
 // ===== EDIT MODE (password protected) =====
@@ -3354,7 +3482,9 @@ document.addEventListener('click', function(e) {
   openLightbox(images, idx, caption);
 });
 
-renderAll();
+// 首屏先显示加载态(脚本执行时立即替换硬编码静态内容,避免顺序闪变)
+// 正式渲染由 DOMContentLoaded -> loadCloudData 在拿到云数据后按 order 执行
+showContentLoading();
 
 // =====================================================
 // PRODUCT SEARCH
@@ -3370,6 +3500,14 @@ function doSearch(q) {
 
 function _execSearch(q) {
   const noResult = document.getElementById('searchNoResult');
+  const wasSearching = _activeSearch !== '';
+  _activeSearch = q;
+  // 搜索状态切换时重渲染:搜索时展示全部品牌(不分页、重置品牌筛选),清空时恢复分页
+  if (wasSearching !== (q !== '')) {
+    brandPage = 1;
+    brandFilter = 'all';
+    renderAll();
+  }
   // 清除所有高亮
   document.querySelectorAll('.search-highlight').forEach(el => {
     const parent = el.parentNode;
