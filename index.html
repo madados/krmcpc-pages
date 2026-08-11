@@ -66,18 +66,7 @@ img{
   padding:70px 24px 80px;
   overflow:hidden;
 }
-/* page switch arrows */
-.hero-nav-arrow{
-  position:absolute;top:50%;transform:translateY(-50%);
-  width:42px;height:42px;border-radius:50%;
-  background:rgba(255,255,255,.12);border:1.5px solid rgba(255,255,255,.25);
-  color:#fff;font-size:18px;cursor:pointer;
-  display:flex;align-items:center;justify-content:center;
-  transition:.25s;z-index:5;backdrop-filter:blur(6px);
-}
-.hero-nav-arrow:hover{background:rgba(255,255,255,.25);transform:translateY(-50%) scale(1.12)}
-.hero-nav-prev{left:16px}
-.hero-nav-next{right:16px}
+/* page switch arrows (已去除,保留注释占位) */
 .hero::before{
   content:'';
   position:absolute;inset:0;
@@ -272,8 +261,7 @@ body.sb-collapsed .st-icon{transform:rotate(180deg)}
 }
 /* 工厂视图隐藏主题相关元素 */
 body.view-factory .controls-bar,
-body.view-factory #searchWrap,
-body.view-factory .hero-nav-arrow{display:none !important}
+body.view-factory #searchWrap{display:none !important}
 /* 移动端汉堡按钮 */
 .hamburger{
   display:none;position:fixed;top:14px;left:14px;z-index:300;
@@ -742,6 +730,8 @@ body.edit-mode .add-img-btn{display:flex}
 /* ===== 动画效果 ===== */
 .reveal{opacity:0;transform:translateY(26px);transition:opacity .6s ease,transform .6s cubic-bezier(.4,0,.2,1)}
 .reveal.in{opacity:1;transform:none}
+/* 首屏元素免动画（进入页面直接显示） */
+.reveal.reveal-instant{transition:none}
 .btn-ripple{position:relative;overflow:hidden}
 .ripple-ink{
   position:absolute;border-radius:50%;
@@ -775,19 +765,38 @@ body.edit-mode .add-img-btn{display:flex}
 .pg-btn:hover:not(:disabled),.pg-num:hover:not(.active){border-color:#667eea;color:#667eea}
 .pg-num.active{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-color:transparent}
 .pg-btn:disabled{opacity:.4;cursor:not-allowed}
+/* 品牌产品折叠(>6个) */
+/* overflow-anchor:none: 关闭浏览器原生滚动锚定,
+   否则收缩时浏览器会把折叠区内容当作锚点把页面大幅上拉(实测 -2600px),
+   违背"收缩时当前位置不变"的交互要求;只保留浏览器对 scrollY 的最小钳制 */
+.products-grid,
+.brand-section{overflow-anchor:none}
+.products-grid.collapsed .product-card:nth-child(n+7){display:none}
+.expand-btn{
+  display:block;margin:16px auto 0;padding:9px 28px;
+  border-radius:50px;border:1.5px solid #667eea;background:#fff;
+  color:#667eea;font-size:13px;font-weight:600;cursor:pointer;transition:.2s;
+}
+.expand-btn:hover{background:#667eea;color:#fff}
+@media(max-width:768px){
+  .expand-btn{width:100%;max-width:320px}
+}
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation:none!important;transition:none!important}
   .reveal{opacity:1;transform:none}
 }
 
 /* ===== RESPONSIVE ===== */
+/* 笔记本中等屏幕（≤1200px）：hero 标题略缩小防换行 */
+@media (max-width: 1200px){
+  .hero h1{font-size:clamp(24px,5vw,44px)}
+}
 @media(max-width:640px){
   /* ---- Hero ---- */
   .hero{padding:48px 16px 56px}
   .hero h1{font-size:clamp(24px,7vw,40px)}
   .hero-sub{font-size:14px;margin-bottom:20px}
   .hero-badge{font-size:11px;padding:5px 14px}
-  .hero-nav-arrow{width:34px;height:34px;font-size:15px}
   .hero-paws{font-size:50px}
   /* stats stack vertically on mobile */
   .hero-stats{
@@ -1245,8 +1254,6 @@ body.edit-mode #addBrandFab{display:flex}
 
 <!-- HERO (dynamic content rendered by JS) -->
 <header class="hero" id="heroHeader" style="background: linear-gradient(135deg, rgb(10, 46, 26), rgb(13, 92, 58), rgb(26, 139, 92));">
-    <button class="hero-nav-arrow hero-nav-prev" onclick="switchTheme('pet',null)" title="宠物口溶膜产品">‹</button>
-    <button class="hero-nav-arrow hero-nav-next" onclick="switchTheme('pharma',null)" title="医药口溶膜产品">›</button>
     <div class="hero-deco p1">💊</div>
     <div class="hero-deco p2">🌿</div>
     <div class="hero-deco p3">❤️</div>
@@ -2113,9 +2120,11 @@ const _defaultIcons = {'petpax':'🐶','nelm':'🦷','zoeuticals':'💊','meltai
 
 // ===== 分页与筛选状态 =====
 const BRANDS_PER_PAGE = 4;
+const MAX_PROD = 6; // 品牌产品超过6个时折叠显示
 var brandPage = 1;
 var brandFilter = 'all';
 var _activeSearch = '';
+var collapsedBrands = {}; // brandId -> 是否折叠(默认折叠)
 
 function renderAll() {
   const bar = document.getElementById('controlsBar');
@@ -2174,6 +2183,18 @@ function renderAll() {
       grid.appendChild(renderProduct(brand, prod, pi));
     });
 
+    // 产品超过6个：默认折叠显示前6个，展开/收缩按钮
+    if (brand.products.length > MAX_PROD) {
+      if (collapsedBrands[brand.id] === undefined) collapsedBrands[brand.id] = true;
+      grid.classList.add('collapsed');
+      const exp = document.createElement('button');
+      exp.className = 'expand-btn';
+      exp.setAttribute('data-brand', brand.id);
+      exp.innerHTML = '展开全部 ' + brand.products.length + ' 个产品 ▾';
+      exp.onclick = function(){ toggleBrandProducts(brand.id, this); };
+      sec.appendChild(exp);
+    }
+
     // add product button (edit mode)
     const addProd = document.createElement('div');
     addProd.style.cssText='display:none;margin-top:16px;cursor:pointer;text-align:center;padding:18px;border:2px dashed #ccc;border-radius:16px;color:#bbb;font-size:14px;transition:.3s';
@@ -2212,6 +2233,108 @@ function goToPage(n) {
   brandPage = n;
   renderAll();
   window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// 品牌产品展开/收缩切换（平滑高度过渡 + 收缩时还原到展开前位置）
+//
+// 交互期望（用户明确要求）：
+// - 展开：网格自然向下展开，新卡片出现在按钮下方，页面不滚动；
+// - 收缩：页面“撤销”回到展开前的样子 —— 用展开瞬间记录的 scrollY 平滑滚回，
+//   再配合平滑的高度过渡，视觉上完全回到未展开时的视图；不再跳到页面底部。
+//
+// 实现要点：
+// 1) 展开时把 `window.scrollY` 记到 `grid.dataset.expandScrollY`；
+// 2) 收缩时 `window.scrollTo({top: 该值, behavior:'smooth'})` 平滑还原（与高度动画并行），
+//    目标始终 clamp 到 [0, maxScroll]，防止越界；若无记录（如跨主题/搜索后）则保持当前滚动；
+// 3) 高度过渡动画：先固定 grid 当前高度，再平滑过渡到目标高度（overflow:hidden 渐进裁切/显现卡片）；
+// 4) `.products-grid/.brand-section` 已设 `overflow-anchor:none`（见 CSS），
+//    关闭浏览器原生滚动锚定，避免收缩时把页面大幅上拉；
+// 5) `prefers-reduced-motion` 走瞬间切换 + 瞬间滚动还原；
+// 6) `dataset.anim` 重入保护；transitionend + 定时器双兜底清理内联样式。
+function toggleBrandProducts(brandId, btn) {
+  const grid = document.getElementById('grid-' + brandId);
+  if (!grid) return;
+  if (grid.dataset.anim) return; // 动画进行中，忽略重复点击
+
+  const wasCollapsed = grid.classList.contains('collapsed');
+  const total = grid.querySelectorAll('.product-card').length;
+  const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // 展开：记录点击瞬间的滚动位置，收缩时据此还原“展开前”的视图
+  if (wasCollapsed) {
+    grid.dataset.expandScrollY = String(window.scrollY);
+  }
+
+  // ---- 无动画路径（系统关闭动效）：瞬间切换 + 瞬间滚动还原 ----
+  if (reduced) {
+    grid.classList.toggle('collapsed', !wasCollapsed);
+    collapsedBrands[brandId] = !wasCollapsed;
+    if (btn) btn.innerHTML = collapsedBrands[brandId] ? ('展开全部 ' + total + ' 个产品 ▾') : '收起 ▲';
+    if (!wasCollapsed) {
+      const target = parseFloat(grid.dataset.expandScrollY || '');
+      if (!isNaN(target)) {
+        const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+        window.scrollTo(0, Math.max(0, Math.min(target, max)));
+      }
+    }
+    return;
+  }
+
+  // ---- 动画路径 ----
+  // 测量目标高度：切一次 class 取自然高度，再切回保持原视觉
+  const startH = grid.offsetHeight;
+  grid.classList.toggle('collapsed');
+  const endH = grid.offsetHeight;
+  grid.classList.toggle('collapsed');
+
+  // 展开方向：先把所有卡片标记为可见，避免 reveal 动画让展开区域空白
+  if (wasCollapsed) {
+    grid.querySelectorAll('.product-card').forEach(function(c){ c.classList.add('in'); });
+  }
+
+  // 收缩：与高度动画并行，平滑滚回展开前位置（还原视图，不跳到页面底部）
+  if (!wasCollapsed) {
+    const target = parseFloat(grid.dataset.expandScrollY || '');
+    if (!isNaN(target)) {
+      const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      const finalTarget = Math.max(0, Math.min(target, max));
+      window.scrollTo({top: finalTarget, behavior: 'smooth'});
+    }
+  }
+
+  // 播放高度过渡
+  grid.dataset.anim = '1';
+  grid.style.height = startH + 'px';
+  grid.style.overflow = 'hidden';
+  void grid.offsetHeight; // 强制重排，确保过渡从 startH 开始
+  grid.style.transition = 'height .38s cubic-bezier(.4,0,.2,1)';
+  grid.style.height = endH + 'px';
+
+  const finish = function() {
+    // 落到最终折叠状态并清理内联样式
+    grid.classList.toggle('collapsed', !wasCollapsed);
+    collapsedBrands[brandId] = !wasCollapsed;
+    grid.style.height = '';
+    grid.style.overflow = '';
+    grid.style.transition = '';
+    grid.dataset.anim = '';
+    if (btn) btn.innerHTML = collapsedBrands[brandId] ? ('展开全部 ' + total + ' 个产品 ▾') : '收起 ▲';
+    // 最小钳制兜底：文档变短后若 scrollY 仍越界（浏览器未及时修正的极端情况），修正一次
+    const max = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    if (window.scrollY > max) window.scrollTo(0, max);
+  };
+
+  // transitionend 收尾（并做定时兜底，兼容 transition 被浏览器跳过的情况）
+  var ended = false;
+  const onEnd = function(ev) {
+    if (ev && (ev.target !== grid || ev.propertyName !== 'height')) return;
+    if (ended) return;
+    ended = true;
+    grid.removeEventListener('transitionend', onEnd);
+    finish();
+  };
+  grid.addEventListener('transitionend', onEnd);
+  setTimeout(function(){ onEnd(null); }, 480);
 }
 
 function renderProduct(brand, prod, pi) {
@@ -2430,7 +2553,7 @@ document.addEventListener('keydown',e=>{
 // ===== THEME SYSTEM =====
 const THEMES = {
   pet: {
-    title: '浙江齐蓁科技海内外大宠物口溶膜',
+    title: '浙江齐蓁科技海内外宠物口溶膜',
     badge: 'GLOBAL PET HEALTH · ORAL DISSOLVING STRIPS',
     subtitle: '全球领先的宠物口溶膜（Oral Dissolving Strip）产品精选合集<br>收录6大品牌 · 超薄快溶 · 高效吸收 · 无应激喂服',
     stats: [
@@ -2595,6 +2718,7 @@ function renderFactories() {
 }
 
 // ===== SCROLL REVEAL (滚动显现动画) =====
+// 规则：首屏（视口内）元素直接显示、不播放动画；仅视口下方的元素在滚动进入时播放过渡动画
 function initReveal() {
   var els = document.querySelectorAll('.reveal:not(.in)');
   if (!('IntersectionObserver' in window)) {
@@ -2611,7 +2735,17 @@ function initReveal() {
       });
     }, {threshold: 0.1, rootMargin: '0px 0px -40px 0px'});
   }
-  els.forEach(function(el){ window._revealObserver.observe(el); });
+  var viewH = window.innerHeight || document.documentElement.clientHeight;
+  els.forEach(function(el) {
+    var rect = el.getBoundingClientRect();
+    if (rect.top < viewH && rect.bottom > 0) {
+      // 已处于首屏：立即显示且无动画
+      el.classList.add('in', 'reveal-instant');
+    } else {
+      // 视口下方：滚动进入时播放过渡动画
+      window._revealObserver.observe(el);
+    }
+  });
 }
 
 // ===== CLICK RIPPLE (按钮点击涟漪) =====
@@ -2677,15 +2811,8 @@ function renderHero() {
   const t = THEMES[currentTheme];
   const hero = document.getElementById('heroHeader');
   hero.style.background = t.gradient;
-  // find prev/next theme keys in order
-  const order = ['pet','health','pharma'];
-  const idx = order.indexOf(currentTheme);
-  const prevKey = order[(idx-1+order.length)%order.length];
-  const nextKey = order[(idx+1)%order.length];
-  
+
   hero.innerHTML = `
-    <button class="hero-nav-arrow hero-nav-prev" onclick="switchTheme('${prevKey}',null)" title="${THEMES[prevKey].title}">‹</button>
-    <button class="hero-nav-arrow hero-nav-next" onclick="switchTheme('${nextKey}',null)" title="${THEMES[nextKey].title}">›</button>
     <div class="${t.decoClass} p1">${t.decos[0]}</div>
     <div class="${t.decoClass} p2">${t.decos[1]}</div>
     <div class="${t.decoClass} p3">${t.decos[2]}</div>
@@ -3538,6 +3665,21 @@ function _execSearch(q) {
     sec.classList.toggle('search-all-hidden', visible === 0);
   });
   noResult.style.display = totalVisible === 0 ? 'block' : 'none';
+
+  // 搜索联动折叠：搜索时展开全部品牌产品，清空时恢复折叠状态
+  document.querySelectorAll('.products-grid').forEach(g => {
+    const bid = (g.id || '').replace('grid-', '');
+    if (q) {
+      g.classList.remove('collapsed');
+    } else if (bid && collapsedBrands[bid] !== false && g.querySelectorAll('.product-card').length > MAX_PROD) {
+      g.classList.add('collapsed');
+    }
+  });
+  document.querySelectorAll('.expand-btn').forEach(b => {
+    const grid = document.getElementById('grid-' + (b.getAttribute('data-brand') || ''));
+    const total = grid ? grid.querySelectorAll('.product-card').length : 0;
+    b.innerHTML = (grid && grid.classList.contains('collapsed')) ? ('展开全部 ' + total + ' 个产品 ▾') : '收起 ▲';
+  });
 }
 
 function _highlightCard(card, q) {
