@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录 · 浙江齐蓁科技</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1d1d1f;--ink-2:#6e6e73;
+  --accent:#ff6900;--accent-hover:#e55f00;
+  --ease:cubic-bezier(.4,0,.2,1);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",sans-serif;
+  min-height:100vh;color:#fff;
+  background:
+    radial-gradient(1000px 500px at 50% 115%,rgba(255,105,0,.16),transparent 60%),
+    radial-gradient(800px 420px at 18% -5%,rgba(80,120,255,.14),transparent 55%),
+    radial-gradient(700px 400px at 85% 10%,rgba(255,105,0,.10),transparent 55%),
+    #0c0c0f;
+  display:flex;align-items:center;justify-content:center;
+  padding:24px;-webkit-font-smoothing:antialiased;
+  position:relative;overflow:hidden;
+}
+body::after{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg width='72' height='72' viewBox='0 0 72 72' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='36' cy='36' r='1.2' fill='%23ffffff' fill-opacity='0.05'/%3E%3C/svg%3E");
+}
+.login-card{
+  position:relative;z-index:2;width:min(420px,100%);
+  background:rgba(255,255,255,.06);
+  -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+  border:1px solid rgba(255,255,255,.13);
+  border-radius:26px;padding:40px 36px 32px;
+  box-shadow:0 40px 120px rgba(0,0,0,.55);
+  animation:cardIn .7s var(--spring);
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(30px) scale(.96)}to{opacity:1;transform:none}}
+.brand{text-align:center;margin-bottom:30px}
+.brand-logo{
+  width:56px;height:56px;margin:0 auto 14px;border-radius:16px;
+  background:linear-gradient(135deg,var(--accent),#ff8f3d);
+  display:flex;align-items:center;justify-content:center;font-size:26px;
+  box-shadow:0 12px 34px rgba(255,105,0,.4);
+  animation:logoFloat 5s ease-in-out infinite;
+}
+@keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+.brand h1{font-size:22px;font-weight:800;letter-spacing:-.5px;margin-bottom:6px}
+.brand p{font-size:12px;color:rgba(255,255,255,.5);letter-spacing:2px}
+/* 登录/注册 切换 */
+.tabs{
+  display:flex;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:99px;padding:4px;margin-bottom:26px;
+}
+.tab{
+  flex:1;padding:10px;border-radius:99px;border:none;background:transparent;
+  color:rgba(255,255,255,.6);font-size:14px;font-weight:600;cursor:pointer;
+  transition:.3s var(--spring);
+}
+.tab.active{background:#fff;color:var(--ink);box-shadow:0 4px 16px rgba(0,0,0,.25)}
+/* 登录方式切换 */
+.login-modes{display:flex;gap:18px;margin-bottom:18px}
+.lm{
+  font-size:13px;color:rgba(255,255,255,.5);cursor:pointer;padding-bottom:5px;
+  border-bottom:2px solid transparent;transition:.25s;user-select:none;
+}
+.lm.active{color:#fff;border-color:var(--accent);font-weight:600}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:12px;color:rgba(255,255,255,.55);margin-bottom:6px;font-weight:600;letter-spacing:.5px}
+.form-group input{
+  width:100%;padding:13px 16px;border-radius:13px;
+  border:1.5px solid rgba(255,255,255,.16);
+  background:rgba(255,255,255,.07);color:#fff;font-size:15px;
+  outline:none;transition:.25s;font-family:inherit;
+}
+.form-group input::placeholder{color:rgba(255,255,255,.3)}
+.form-group input:focus{border-color:var(--accent);background:rgba(255,255,255,.1);box-shadow:0 0 0 4px rgba(255,105,0,.16)}
+.code-row{display:flex;gap:10px}
+.code-row input{flex:1}
+.code-btn{
+  flex-shrink:0;padding:0 18px;border-radius:13px;
+  border:1.5px solid rgba(255,105,0,.55);color:var(--accent);
+  background:rgba(255,105,0,.08);font-size:13px;font-weight:600;cursor:pointer;
+  transition:.25s;white-space:nowrap;
+}
+.code-btn:hover:not(:disabled){background:rgba(255,105,0,.18)}
+.code-btn:disabled{opacity:.45;cursor:not-allowed}
+.err{
+  display:none;font-size:13px;color:#ff9d7a;margin:4px 0 10px;
+  animation:shake .4s ease;
+}
+.err.show{display:block}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.submit-btn{
+  width:100%;padding:14px;border:none;border-radius:13px;
+  background:var(--accent);color:#fff;font-size:16px;font-weight:700;cursor:pointer;
+  transition:.3s var(--spring);box-shadow:0 10px 30px rgba(255,105,0,.35);
+  margin-top:8px;
+}
+.submit-btn:hover:not(:disabled){background:var(--accent-hover);transform:translateY(-2px);box-shadow:0 16px 40px rgba(255,105,0,.45)}
+.submit-btn:active:not(:disabled){transform:scale(.97)}
+.submit-btn:disabled{opacity:.6;cursor:not-allowed}
+.switch-hint{text-align:center;font-size:13px;color:rgba(255,255,255,.45);margin-top:18px}
+.switch-hint a{color:var(--accent);cursor:pointer;font-weight:600;margin-left:4px}
+.switch-hint a:hover{text-decoration:underline}
+.foot-note{
+  text-align:center;margin-top:22px;font-size:11px;color:rgba(255,255,255,.3);line-height:1.7;
+}
+.panel{display:none}
+.panel.active{display:block;animation:panelIn .35s var(--ease)}
+@keyframes panelIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media(max-width:480px){
+  body{padding:14px;align-items:flex-start;padding-top:max(24px, env(safe-area-inset-top))}
+  .login-card{padding:28px 20px 22px;border-radius:20px}
+  .brand{margin-bottom:22px}
+  .brand-logo{width:48px;height:48px;font-size:22px;margin-bottom:10px}
+  .brand h1{font-size:19px}
+  /* iOS：输入框字号≥16px 防止聚焦时页面自动放大 */
+  .form-group input{font-size:16px;padding:12px 14px}
+  .code-btn{padding:0 14px;font-size:12px}
+  .submit-btn{padding:13px;font-size:16px}
+}
+</style>
+</head>
+<body>
+
+<div class="login-card">
+  <div class="brand">
+    <div class="brand-logo">🧬</div>
+    <h1>浙江齐蓁科技</h1>
+    <p>KRMPC · ODF 口溶膜</p>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tabLogin" onclick="switchTab('login')">登 录</button>
+    <button class="tab" id="tabRegister" onclick="switchTab('register')">注 册</button>
+  </div>
+
+  <!-- ===== 登录 ===== -->
+  <div class="panel active" id="panelLogin">
+    <div class="login-modes">
+      <span class="lm active" id="lmPwd" onclick="switchMode('pwd')">密码登录</span>
+      <span class="lm" id="lmSms" onclick="switchMode('sms')">验证码登录</span>
+    </div>
+    <div class="form-group">
+      <label>手机号码</label>
+      <input id="loginPhone" type="tel" maxlength="11" placeholder="请输入 11 位手机号">
+    </div>
+    <div class="form-group" id="pwdGroup">
+      <label>密码</label>
+      <input id="loginPwd" type="password" placeholder="请输入密码" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <div class="form-group" id="codeGroup" style="display:none">
+      <label>短信验证码</label>
+      <div class="code-row">
+        <input id="loginCode" type="tel" maxlength="6" placeholder="6 位验证码" onkeydown="if(event.key==='Enter')doLogin()">
+        <button class="code-btn" id="sendCodeBtn" onclick="sendCode()">获取验证码</button>
+      </div>
+    </div>
+    <div class="err" id="loginErr"></div>
+    <button class="submit-btn" id="loginBtn" onclick="doLogin()">登 录</button>
+    <div class="switch-hint">还没有账号？<a onclick="switchTab('register')">立即注册</a></div>
+  </div>
+
+  <!-- ===== 注册 ===== -->
+  <div class="panel" id="panelRegister">
+    <div class="form-group">
+      <label>公司名称 *</label>
+      <input id="regCompany" type="text" placeholder="请输入您所在的公司">
+    </div>
+    <div class="form-group">
+      <label>职位 *</label>
+      <input id="regPosition" type="text" placeholder="如 采购经理 / 研发工程师">
+    </div>
+    <div class="form-group">
+      <label>姓名 *</label>
+      <input id="regName" type="text" placeholder="请输入您的姓名">
+    </div>
+    <div class="form-group">
+      <label>电话号码 *</label>
+      <input id="regPhone" type="tel" maxlength="11" placeholder="用于登录的 11 位手机号">
+    </div>
+    <div class="form-group">
+      <label>设置密码 *</label>
+      <input id="regPwd" type="password" placeholder="至少 6 位密码" onkeydown="if(event.key==='Enter')doRegister()">
+    </div>
+    <div class="err" id="regErr"></div>
+    <button class="submit-btn" id="regBtn" onclick="doRegister()">注册并登录</button>
+    <div class="switch-hint">已有账号？<a onclick="switchTab('login')">直接登录</a></div>
+  </div>
+
+  <div class="foot-note">登录 / 注册即表示您已阅读并同意 <a href="agreement.html" target="_blank" style="color:var(--accent);text-decoration:none">《用户登录协议》</a><br>信息仅保存于齐蓁科技后台，不会对外公开</div>
+</div>
+
+<script>
+var CLOUD_FUNC_URL = 'https://kourongmo-d3g3hjn7n3c76c396-1410044026.ap-shanghai.app.tcloudbase.com/api/db-proxy';
+var TOKEN_KEY = 'krmcpc_user_token';
+var USER_KEY = 'krmcpc_user_info';
+var loginMode = 'pwd';
+var countdownTimer = null;
+
+/* 已登录则直接进首页（嵌入弹窗模式不跳转） */
+var IS_EMBED = (window.self !== window.top) || /[?&]embed=1/.test(location.search);
+(function(){
+  if (IS_EMBED) return;
+  var t = null;
+  try { t = localStorage.getItem(TOKEN_KEY); } catch(e){}
+  if (t){
+    try {
+      var p = JSON.parse(atob(t.split('.')[0].replace(/-/g,'+').replace(/_/g,'/')));
+      if (p && p.exp && p.exp > Date.now()) location.replace('index.html');
+    } catch(e){}
+  }
+})();
+
+function switchTab(tab){
+  document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+  document.getElementById('tabRegister').classList.toggle('active', tab === 'register');
+  document.getElementById('panelLogin').classList.toggle('active', tab === 'login');
+  document.getElementById('panelRegister').classList.toggle('active', tab === 'register');
+  hideErr();
+}
+function switchMode(mode){
+  loginMode = mode;
+  document.getElementById('lmPwd').classList.toggle('active', mode === 'pwd');
+  document.getElementById('lmSms').classList.toggle('active', mode === 'sms');
+  document.getElementById('pwdGroup').style.display = mode === 'pwd' ? '' : 'none';
+  document.getElementById('codeGroup').style.display = mode === 'sms' ? '' : 'none';
+  hideErr();
+}
+function showErr(id, msg){
+  var el = document.getElementById(id);
+  el.textContent = '❌ ' + msg;
+  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+}
+function hideErr(){
+  document.getElementById('loginErr').classList.remove('show');
+  document.getElementById('regErr').classList.remove('show');
+}
+function validPhone(p){ return /^1\d{10}$/.test(p); }
+
+async function callApi(data){
+  var res = await fetch(CLOUD_FUNC_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(data)
+  });
+  return res.json();
+}
+
+function saveSession(result){
+  try {
+    localStorage.setItem(TOKEN_KEY, result.token);
+    localStorage.setItem(USER_KEY, JSON.stringify(result.user || {}));
+  } catch(e){}
+  if (IS_EMBED){
+    /* 嵌入模式：通知父页面登录成功，由父页面关闭弹窗并解锁 */
+    try { window.parent.postMessage({type:'krmcpc-login-success'}, '*'); } catch(e){}
+    return;
+  }
+  location.replace('index.html');
+}
+
+/* ===== 登录 ===== */
+async function doLogin(){
+  var phone = document.getElementById('loginPhone').value.trim();
+  if (!validPhone(phone)) return showErr('loginErr', '请输入正确的 11 位手机号');
+  var btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = '登录中…';
+  try {
+    var data;
+    if (loginMode === 'pwd'){
+      var pwd = document.getElementById('loginPwd').value;
+      if (!pwd) { btn.disabled = false; btn.textContent = '登 录'; return showErr('loginErr', '请输入密码'); }
+      data = await callApi({action:'userLogin', phone:phone, password:pwd});
+    } else {
+      var code = document.getElementById('loginCode').value.trim();
+      if (!code) { btn.disabled = false; btn.textContent = '登 录'; return showErr('loginErr', '请输入验证码'); }
+      data = await callApi({action:'smsLogin', phone:phone, code:code});
+    }
+    if (data && data.success){
+      btn.textContent = '✅ 登录成功';
+      saveSession(data);
+    } else {
+      showErr('loginErr', (data && data.error) || '登录失败，请重试');
+      btn.disabled = false; btn.textContent = '登 录';
+    }
+  } catch(e){
+    showErr('loginErr', '网络错误，请稍后重试');
+    btn.disabled = false; btn.textContent = '登 录';
+  }
+}
+
+/* ===== 发送验证码 ===== */
+function sendCode(){
+  var phone = document.getElementById('loginPhone').value.trim();
+  if (!validPhone(phone)) return showErr('loginErr', '请先输入正确的手机号');
+  var btn = document.getElementById('sendCodeBtn');
+  btn.disabled = true; btn.textContent = '发送中…';
+  callApi({action:'sendSms', phone:phone}).then(function(data){
+    if (data && data.success){
+      hideErr();
+      var sec = 60;
+      btn.textContent = sec + 's 后重发';
+      countdownTimer = setInterval(function(){
+        sec--;
+        if (sec <= 0){
+          clearInterval(countdownTimer);
+          btn.disabled = false; btn.textContent = '获取验证码';
+        } else {
+          btn.textContent = sec + 's 后重发';
+        }
+      }, 1000);
+      if (data.debugCode){
+        document.getElementById('loginCode').value = data.debugCode;
+      }
+    } else {
+      showErr('loginErr', (data && data.error) || '发送失败');
+      btn.disabled = false; btn.textContent = '获取验证码';
+    }
+  }).catch(function(){
+    showErr('loginErr', '网络错误，请稍后重试');
+    btn.disabled = false; btn.textContent = '获取验证码';
+  });
+}
+
+/* ===== 注册 ===== */
+async function doRegister(){
+  var company = document.getElementById('regCompany').value.trim();
+  var position = document.getElementById('regPosition').value.trim();
+  var name = document.getElementById('regName').value.trim();
+  var phone = document.getElementById('regPhone').value.trim();
+  var pwd = document.getElementById('regPwd').value;
+  if (!company) return showErr('regErr', '请填写公司名称');
+  if (!position) return showErr('regErr', '请填写职位');
+  if (!name) return showErr('regErr', '请填写姓名');
+  if (!validPhone(phone)) return showErr('regErr', '请输入正确的 11 位手机号');
+  if (pwd.length < 6) return showErr('regErr', '密码至少 6 位');
+  var btn = document.getElementById('regBtn');
+  btn.disabled = true; btn.textContent = '注册中…';
+  try {
+    var data = await callApi({action:'userRegister', company:company, position:position, name:name, phone:phone, password:pwd});
+    if (data && data.success){
+      btn.textContent = '✅ 注册成功';
+      saveSession(data);
+    } else {
+      showErr('regErr', (data && data.error) || '注册失败，请重试');
+      btn.disabled = false; btn.textContent = '注册并登录';
+    }
+  } catch(e){
+    showErr('regErr', '网络错误，请稍后重试');
+    btn.disabled = false; btn.textContent = '注册并登录';
+  }
+}
+</script>
+</body>
+</html>
