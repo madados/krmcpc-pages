@@ -6,72 +6,157 @@
 <title>KRMPC 管理后台</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--primary:#667eea;--primary-dark:#764ba2;--bg:#f5f5f5;--card-bg:#fff;--text:#333;--text-light:#888;--border:#e0e4ec;--radius:8px;--transition:.25s cubic-bezier(.4,0,.2,1);--font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
-body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh}
-.login-screen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,#667eea,#764ba2)}
-.login-box{background:#fff;padding:40px;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:360px;text-align:center}
-.login-box h1{font-size:24px;margin-bottom:8px}
-.login-box p{color:var(--text-light);margin-bottom:24px;font-size:14px}
-.login-box input{width:100%;padding:12px 16px;border:1.5px solid var(--border);border-radius:8px;font-size:16px;margin-bottom:16px}
-.login-box input:focus{outline:none;border-color:var(--primary)}
-.login-box button{width:100%;padding:12px;background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;border:none;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer}
-.login-box button:hover{opacity:.9}
-.login-error{color:#e74c3c;font-size:13px;margin-bottom:12px;display:none}
-.admin-app{display:none}
-.admin-header{background:linear-gradient(135deg,var(--primary),var(--primary-dark));color:#fff;padding:20px 30px;display:flex;justify-content:space-between;align-items:center}
-.admin-header h1{font-size:20px}
-.logout-btn{background:rgba(255,255,255,.2);color:#fff;border:none;padding:8px 20px;border-radius:20px;cursor:pointer;font-size:13px}
-.admin-main{max-width:1200px;margin:20px auto;padding:0 20px}
-.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
-.stat-card{background:#fff;padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.06);text-align:center}
-.stat-card .num{font-size:32px;font-weight:700;color:var(--primary)}
-.stat-card .label{font-size:13px;color:var(--text-light);margin-top:4px}
-.section{background:#fff;border-radius:12px;padding:24px;margin-bottom:24px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
-.section h2{font-size:18px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
-.btn{padding:8px 20px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:var(--transition)}
-.btn-primary{background:var(--primary);color:#fff}
-.btn-primary:hover{background:var(--primary-dark)}
+:root{
+  --primary:#ff6900;--primary-dark:#e55f00;
+  --ink:#1d1d1f;--ink-2:#6e6e73;
+  --bg:#f5f5f7;--card-bg:#fff;--text:#1d1d1f;--text-light:#86868b;
+  --border:rgba(0,0,0,.08);--radius:14px;
+  --transition:.25s cubic-bezier(.4,0,.2,1);
+  --spring:cubic-bezier(.34,1.56,.64,1);
+  --font:-apple-system,BlinkMacSystemFont,"PingFang SC","HarmonyOS Sans SC","Microsoft YaHei",sans-serif;
+}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+::selection{background:rgba(255,105,0,.18)}
+
+/* 登录页：深色 + 橙色光晕 + 毛玻璃卡 */
+.login-screen{
+  display:flex;align-items:center;justify-content:center;min-height:100vh;
+  background:
+    radial-gradient(700px 380px at 50% 110%,rgba(255,105,0,.22),transparent 62%),
+    radial-gradient(600px 320px at 15% 0%,rgba(80,120,255,.14),transparent 55%),
+    #0c0c0f;
+}
+.login-box{
+  background:rgba(255,255,255,.06);
+  -webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,.12);
+  padding:44px 40px;border-radius:22px;
+  box-shadow:0 30px 90px rgba(0,0,0,.5);
+  width:370px;text-align:center;color:#fff;
+  animation:loginIn .6s var(--spring);
+}
+@keyframes loginIn{from{opacity:0;transform:translateY(24px) scale(.96)}to{opacity:1;transform:none}}
+.login-box h1{font-size:24px;margin-bottom:8px;letter-spacing:-.5px}
+.login-box p{color:rgba(255,255,255,.55);margin-bottom:24px;font-size:14px}
+.login-box input{
+  width:100%;padding:13px 16px;border:1.5px solid rgba(255,255,255,.18);border-radius:12px;
+  font-size:16px;margin-bottom:16px;background:rgba(255,255,255,.08);color:#fff;transition:var(--transition);
+}
+.login-box input::placeholder{color:rgba(255,255,255,.35)}
+.login-box input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 4px rgba(255,105,0,.18)}
+.login-box button{
+  width:100%;padding:13px;background:var(--primary);color:#fff;border:none;border-radius:12px;
+  font-size:16px;font-weight:600;cursor:pointer;transition:var(--transition);
+  box-shadow:0 8px 26px rgba(255,105,0,.35);
+}
+.login-box button:hover{background:var(--primary-dark);transform:translateY(-1px)}
+.login-box button:active{transform:scale(.97)}
+.login-error{color:#ff8a5c;font-size:13px;margin-bottom:12px;display:none}
+
+.admin-app{display:none;animation:appIn .5s ease}
+@keyframes appIn{from{opacity:0}to{opacity:1}}
+
+/* 顶部：深色毛玻璃 */
+.admin-header{
+  position:sticky;top:0;z-index:100;
+  background:rgba(17,17,20,.82);
+  -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+  color:#fff;padding:18px 30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;
+  box-shadow:0 1px 0 rgba(255,255,255,.06);
+}
+.admin-header h1{font-size:19px;font-weight:700;letter-spacing:-.3px}
+.logout-btn{
+  background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.16);
+  padding:8px 20px;border-radius:99px;cursor:pointer;font-size:13px;transition:var(--transition);
+}
+.logout-btn:hover{background:rgba(255,255,255,.2)}
+
+.admin-main{max-width:1200px;margin:24px auto;padding:0 20px}
+
+/* 统计卡 */
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:24px}
+.stat-card{
+  background:var(--card-bg);padding:22px 20px;border-radius:16px;
+  box-shadow:0 2px 10px rgba(0,0,0,.04);text-align:center;
+  border:1px solid rgba(0,0,0,.04);
+  transition:transform .3s var(--spring),box-shadow .3s;
+}
+.stat-card:hover{transform:translateY(-4px);box-shadow:0 14px 34px rgba(0,0,0,.09)}
+.stat-card .num{font-size:32px;font-weight:800;letter-spacing:-1px;color:var(--ink)}
+.stat-card .num::after{content:''}
+.stat-card .label{font-size:12px;color:var(--text-light);margin-top:4px;letter-spacing:1px}
+
+/* 区块卡 */
+.section{
+  background:var(--card-bg);border-radius:18px;padding:26px;margin-bottom:24px;
+  box-shadow:0 2px 10px rgba(0,0,0,.04);border:1px solid rgba(0,0,0,.04);
+  animation:secIn .5s ease backwards;
+}
+@keyframes secIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.section h2{font-size:17px;font-weight:700;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;letter-spacing:-.2px}
+
+/* 按钮 */
+.btn{padding:8px 20px;border-radius:99px;border:none;cursor:pointer;font-size:13px;font-weight:600;transition:var(--transition)}
+.btn:active{transform:scale(.95)}
+.btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 14px rgba(255,105,0,.28)}
+.btn-primary:hover{background:var(--primary-dark);transform:translateY(-1px)}
 .btn-danger{background:#e74c3c;color:#fff}
-.btn-danger:hover{background:#c0392b}
+.btn-danger:hover{background:#c0392b;transform:translateY(-1px)}
 .btn-warning{background:#f39c12;color:#fff}
-.btn-warning:hover{background:#d68910}
-.btn-sm{padding:4px 12px;font-size:12px}
+.btn-warning:hover{background:#d68910;transform:translateY(-1px)}
+.btn-sm{padding:5px 14px;font-size:12px}
+
+/* 表格 */
 table{width:100%;border-collapse:collapse}
-th,td{text-align:left;padding:12px 16px;border-bottom:1px solid var(--border);font-size:14px}
-th{background:#f8f9fa;font-weight:600;font-size:13px;color:var(--text-light)}
-tr:hover{background:#f8f9fb}
+th,td{text-align:left;padding:13px 16px;border-bottom:1px solid #f0f0f3;font-size:14px}
+th{background:#fafafb;font-weight:600;font-size:12px;color:var(--text-light);letter-spacing:1px}
+tr{transition:background .2s}
+tr:hover{background:#fafafb}
 .actions{display:flex;gap:8px}
+
+/* 表单 */
 .form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:12px}
 .form-group{display:flex;flex-direction:column}
-.form-group label{font-size:12px;color:var(--text-light);margin-bottom:4px;font-weight:500}
-.form-group input,.form-group select,.form-group textarea{padding:8px 12px;border:1.5px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit}
-.form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary)}
+.form-group label{font-size:12px;color:var(--text-light);margin-bottom:5px;font-weight:600;letter-spacing:.5px}
+.form-group input,.form-group select,.form-group textarea{
+  padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;
+  background:#fafafb;transition:var(--transition);
+}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{
+  outline:none;border-color:var(--primary);background:#fff;box-shadow:0 0 0 4px rgba(255,105,0,.12);
+}
 .form-group textarea{resize:vertical;min-height:60px}
 .form-actions{display:flex;gap:8px;margin-top:12px}
-.toast{position:fixed;top:20px;right:20px;padding:12px 24px;border-radius:8px;color:#fff;font-size:14px;z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none}
-.toast.show{opacity:1}
+
+/* Toast */
+.toast{position:fixed;top:20px;right:20px;padding:12px 24px;border-radius:99px;color:#fff;font-size:14px;z-index:9999;opacity:0;transition:all .35s var(--spring);pointer-events:none;transform:translateY(-8px);box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.toast.show{opacity:1;transform:none}
 .toast-success{background:#27ae60}
 .toast-error{background:#e74c3c}
 .toast-warn{background:#f39c12}
+
 /* 颜色选择器 */
 .color-row{display:flex;gap:12px;align-items:center;margin-bottom:12px}
 .color-picker-wrap{display:flex;flex-direction:column;gap:4px}
-.color-picker-wrap label{font-size:12px;color:var(--text-light);font-weight:500}
-.color-picker-wrap input[type=color]{width:60px;height:36px;padding:2px;border:1.5px solid var(--border);border-radius:6px;cursor:pointer;background:#fff}
-.gradient-preview{flex:1;height:36px;border-radius:6px;border:1px solid var(--border);background:linear-gradient(135deg,#667eea,#764ba2)}
+.color-picker-wrap label{font-size:12px;color:var(--text-light);font-weight:600}
+.color-picker-wrap input[type=color]{width:60px;height:36px;padding:2px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;background:#fff}
+.gradient-preview{flex:1;height:36px;border-radius:10px;border:1px solid var(--border);background:linear-gradient(135deg,var(--primary),var(--primary-dark))}
 .color-palette{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:8px}
-.color-swatch{width:24px;height:24px;border-radius:4px;cursor:pointer;border:2px solid transparent;transition:var(--transition)}
-.color-swatch:hover{border-color:#333;transform:scale(1.1)}
+.color-swatch{width:24px;height:24px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:var(--transition)}
+.color-swatch:hover{border-color:#333;transform:scale(1.15)}
 .color-swatch.selected{border-color:#333;box-shadow:0 0 0 2px #fff,0 0 0 4px var(--primary)}
+
 /* 图片上传 */
-.upload-zone{border:2px dashed var(--border);border-radius:8px;padding:30px;text-align:center;cursor:pointer;transition:var(--transition);background:#fafbfc;margin-bottom:12px}
-.upload-zone:hover,.upload-zone.dragover{border-color:var(--primary);background:#f0f4ff}
+.upload-zone{border:2px dashed var(--border);border-radius:14px;padding:30px;text-align:center;cursor:pointer;transition:var(--transition);background:#fafafb;margin-bottom:12px}
+.upload-zone:hover,.upload-zone.dragover{border-color:var(--primary);background:rgba(255,105,0,.05)}
 .upload-zone-icon{font-size:36px;margin-bottom:8px}
 .upload-zone-text{color:var(--text-light);font-size:14px}
 .image-preview-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:8px;margin-top:12px}
-.image-preview-item{position:relative;aspect-ratio:1;border-radius:6px;overflow:hidden;border:1px solid var(--border)}
+.image-preview-item{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;border:1px solid var(--border);transition:var(--transition)}
+.image-preview-item:hover{transform:scale(1.03);box-shadow:0 8px 20px rgba(0,0,0,.12)}
 .image-preview-item img{width:100%;height:100%;object-fit:cover}
-.image-preview-item .remove-btn{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:50%;background:rgba(231,76,60,.9);color:#fff;border:none;cursor:pointer;font-size:12px;line-height:1;padding:0}
+.image-preview-item .remove-btn{position:absolute;top:4px;right:4px;width:22px;height:22px;border-radius:50%;background:rgba(231,76,60,.92);color:#fff;border:none;cursor:pointer;font-size:12px;line-height:1;padding:0;transition:var(--transition)}
+.image-preview-item .remove-btn:hover{transform:scale(1.15)}
 .image-preview-item .upload-status{position:absolute;bottom:0;left:0;right:0;padding:2px 4px;font-size:10px;text-align:center;color:#fff}
 .image-preview-item .upload-status.uploading{background:rgba(243,156,18,.9)}
 .image-preview-item .upload-status.done{background:rgba(39,174,96,.9)}
@@ -79,17 +164,27 @@ tr:hover{background:#f8f9fb}
 .upload-progress-bar{height:4px;background:#eee;border-radius:2px;overflow:hidden;margin-top:8px;display:none}
 .upload-progress-bar.show{display:block}
 .upload-progress-bar .fill{height:100%;background:var(--primary);transition:width .3s}
+
 /* 拖拽排序 */
 #brandTableBody tr[draggable=true]{cursor:move}
-#brandTableBody tr.dragging{opacity:.4;background:#e3f2fd}
-#brandTableBody tr.drag-over{border-top:2px solid var(--primary);background:#f0f4ff}
-.sort-mode-hint{background:#fff3cd;border:1px solid #ffeaa7;color:#856404;padding:8px 16px;border-radius:6px;margin-bottom:12px;font-size:13px;display:none}
-.sort-mode-hint.show{display:block}
+#brandTableBody tr.dragging{opacity:.4;background:rgba(255,105,0,.06)}
+#brandTableBody tr.drag-over{border-top:2px solid var(--primary);background:rgba(255,105,0,.05)}
+.sort-mode-hint{background:#fff8e1;border:1px solid #ffe0a3;color:#8d6e00;padding:9px 16px;border-radius:10px;margin-bottom:12px;font-size:13px;display:none}
+.sort-mode-hint.show{display:block;animation:secIn .3s ease}
 .drag-handle{color:var(--text-light);cursor:move;font-size:16px;margin-right:8px;user-select:none}
+
 /* 编辑模式 */
-.form-title-edit{color:var(--primary-dark);font-size:14px;font-weight:600;margin-bottom:8px;padding:4px 12px;background:#f0f4ff;border-radius:6px;display:none}
+.form-title-edit{color:var(--primary);font-size:13px;font-weight:700;margin-bottom:8px;padding:5px 14px;background:rgba(255,105,0,.09);border-radius:99px;display:none}
 .form-title-edit.show{display:inline-block}
-@media(max-width:768px){.stat-cards{grid-template-columns:repeat(2,1fr)}table{font-size:12px}th,td{padding:8px}.form-row{grid-template-columns:1fr}.color-row{flex-direction:column;align-items:flex-start}}
+
+/* 首页主推图管理 */
+.hero-slots{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-bottom:16px}
+.hero-slot{background:#fafafb;border:1px solid var(--border);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;transition:var(--transition)}
+.hero-slot:hover{box-shadow:0 10px 26px rgba(0,0,0,.08)}
+.hero-slot .hs-label{font-size:13px;font-weight:700;color:var(--ink)}
+.hero-slot .hs-preview{aspect-ratio:3/4;border-radius:10px;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden}
+.hero-slot .hs-preview img{width:100%;height:100%;object-fit:contain;padding:8px}
+@media(max-width:768px){.stat-cards{grid-template-columns:repeat(2,1fr)}table{font-size:12px}th,td{padding:8px}.form-row{grid-template-columns:1fr}.color-row{flex-direction:column;align-items:flex-start}.admin-header h1{font-size:16px}.form-group input,.form-group select,.form-group textarea{font-size:16px}.section{padding:18px}}
 </style>
 </head>
 <body>
@@ -215,9 +310,9 @@ tr:hover{background:#f8f9fb}
       <div style="overflow-x:auto"><table id="productTable"><thead><tr><th>产品名称</th><th>品牌</th><th>功效</th><th>图片</th><th>操作</th></tr></thead><tbody id="productTableBody"></tbody></table></div>
     </div>
 
-    <!-- 工厂推荐管理 -->
+    <!-- 共享工厂管理 -->
     <div class="section">
-      <h2>工厂推荐管理（共享工厂 / CRO工厂）
+      <h2>共享工厂管理（CRO 服务）
         <button class="btn btn-primary" onclick="openFactoryForm('add')">+ 添加工厂</button>
       </h2>
       <div id="factoryForm" style="display:none;margin-bottom:20px;padding:16px;background:#f8f9fa;border-radius:8px">
@@ -225,13 +320,12 @@ tr:hover{background:#f8f9fb}
         <input type="hidden" id="f_editId" value="">
         <div class="form-row">
           <div class="form-group"><label>工厂名称 *</label><input id="f_name" placeholder="如某某生物科技"></div>
-          <div class="form-group"><label>类型 *</label><select id="f_type"><option value="CRO工厂">CRO工厂</option><option value="共享工厂">共享工厂</option></select></div>
           <div class="form-group"><label>分类 *</label><select id="f_category"><option value="宠物">宠物</option><option value="大健康">大健康</option><option value="医药">医药</option></select></div>
+          <div class="form-group"><label>排序</label><input id="f_order" type="number" value="99"></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>规模</label><input id="f_scale" placeholder="如300人 · 年产能10亿片"></div>
           <div class="form-group"><label>注册资金</label><input id="f_capital" placeholder="如5000万人民币"></div>
-          <div class="form-group"><label>排序</label><input id="f_order" type="number" value="99"></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label>产品类型</label><input id="f_productType" placeholder="如宠物保健品口溶膜"></div>
@@ -257,7 +351,26 @@ tr:hover{background:#f8f9fb}
         </div>
       </div>
 
-      <div style="overflow-x:auto"><table id="factoryTable"><thead><tr><th>排序</th><th>名称</th><th>类型</th><th>分类</th><th>规模</th><th>注册资金</th><th>产品类型</th><th>地区</th><th>图片</th><th>操作</th></tr></thead><tbody id="factoryTableBody"></tbody></table></div>
+      <div style="overflow-x:auto"><table id="factoryTable"><thead><tr><th>排序</th><th>名称</th><th>分类</th><th>规模</th><th>注册资金</th><th>产品类型</th><th>地区</th><th>图片</th><th>操作</th></tr></thead><tbody id="factoryTableBody"></tbody></table></div>
+    </div>
+
+    <!-- 首页主推图管理 -->
+    <div class="section">
+      <h2>首页主推图管理（首屏三图联动）</h2>
+      <div style="font-size:13px;color:var(--text-light);margin-bottom:16px">此处替换的图片与标签会实时同步到前台首页首屏的三张主推产品图（保存后前台刷新即生效）。</div>
+      <div class="hero-slots" id="heroSlots"></div>
+      <div class="form-actions">
+        <button class="btn btn-primary" onclick="saveHeroSettings()">💾 保存主推图</button>
+      </div>
+    </div>
+
+    <!-- 注册用户管理 -->
+    <div class="section">
+      <h2>注册用户管理 <span id="userCount" style="font-size:13px;color:var(--text-light);font-weight:500"></span>
+        <button class="btn btn-primary btn-sm" onclick="loadUsers()">🔄 刷新</button>
+      </h2>
+      <div style="font-size:13px;color:var(--text-light);margin-bottom:14px">访客在前台注册的公司与联系信息保存在此处，可用于客户回访。</div>
+      <div style="overflow-x:auto"><table id="userTable"><thead><tr><th>姓名</th><th>手机号</th><th>公司</th><th>职位</th><th>注册时间</th><th>最近登录</th><th>操作</th></tr></thead><tbody id="userTableBody"></tbody></table></div>
     </div>
   </div>
 </div>
@@ -364,9 +477,9 @@ function isLoggedIn() { return !!getToken(); }
 async function callDb(action, data) {
   data = data || {};
   data.action = action;
-  if (['add','update','delete'].indexOf(action) !== -1) {
-    data.adminToken = getToken();
-  }
+  // 所有请求都附带管理员令牌（写操作必需；读敏感集合 users/sms_codes 也需要）
+  var tk = getToken();
+  if (tk) data.adminToken = tk;
   var res = await fetch(FUNC_URL, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
   var result = await res.json();
   if (!result || !result.success) {
@@ -449,6 +562,8 @@ async function loadAllData() {
     renderFactories();
     populateBrandSelect();
     initColorPalette();
+    loadHeroSettings();
+    loadUsers();
   } catch(e) {
     console.error('Load error:', e);
     toast('❌ 数据加载失败: ' + e.message, 'error');
@@ -757,7 +872,6 @@ function renderFactories() {
     return '<tr data-doc-id="' + f._id + '">' +
       '<td>' + (idx+1) + '</td>' +
       '<td>' + esc(f.name) + '</td>' +
-      '<td>' + esc(f.type || 'CRO工厂') + '</td>' +
       '<td>' + esc(f.category || '-') + '</td>' +
       '<td>' + esc(f.scale || '-') + '</td>' +
       '<td>' + esc(f.capital || '-') + '</td>' +
@@ -783,7 +897,6 @@ function openFactoryForm(mode, docId) {
     document.getElementById('factoryFormTitle').classList.add('show');
     document.getElementById('f_editId').value = docId;
     document.getElementById('f_name').value = f.name || '';
-    document.getElementById('f_type').value = f.type || 'CRO工厂';
     document.getElementById('f_category').value = f.category || '宠物';
     document.getElementById('f_scale').value = f.scale || '';
     document.getElementById('f_capital').value = f.capital || '';
@@ -812,10 +925,9 @@ function closeFactoryForm() {
 }
 
 function clearFactoryForm() {
-  ['f_name','f_type','f_category','f_scale','f_capital','f_productType','f_region','f_description','f_images','f_order','f_editId'].forEach(function(id){
+  ['f_name','f_category','f_scale','f_capital','f_productType','f_region','f_description','f_images','f_order','f_editId'].forEach(function(id){
     var el = document.getElementById(id); if (el) el.value = '';
   });
-  var ft = document.getElementById('f_type'); if (ft) ft.value = 'CRO工厂';
   document.getElementById('f_imagePreview').innerHTML = '';
   document.getElementById('f_progressBar').classList.remove('show');
   document.getElementById('f_progressFill').style.width = '0%';
@@ -830,7 +942,6 @@ async function saveFactory() {
   var images = pendingUploads.filter(function(p) { return p.status === 'done' && p.url; }).map(function(p) { return p.url; });
   var data = {
     name: name,
-    type: document.getElementById('f_type').value,
     category: document.getElementById('f_category').value,
     scale: document.getElementById('f_scale').value.trim(),
     capital: document.getElementById('f_capital').value.trim(),
@@ -983,6 +1094,132 @@ function renderImagePreview() {
 function removeImage(idx) {
   pendingUploads.splice(idx, 1);
   renderImagePreview();
+}
+
+// ==================== 首页主推图管理 ====================
+var heroCards = [{url:'',tag:''},{url:'',tag:''},{url:'',tag:''}];
+var heroDocId = null;
+
+async function loadHeroSettings() {
+  try {
+    var docs = await callDb('get', {collection:'settings'});
+    var heroDoc = (docs || []).filter(function(d){ return d.key === 'hero'; })[0];
+    if (heroDoc) {
+      heroDocId = heroDoc._id;
+      if (heroDoc.cards && heroDoc.cards.length) {
+        heroCards = [0,1,2].map(function(i){ return heroDoc.cards[i] || {url:'',tag:''}; });
+      }
+    }
+  } catch(e) { /* settings 集合首次不存在属正常 */ }
+  renderHeroSlots();
+}
+
+function renderHeroSlots() {
+  var host = document.getElementById('heroSlots');
+  if (!host) return;
+  host.innerHTML = heroCards.map(function(c, i) {
+    return '<div class="hero-slot">'
+      + '<div class="hs-label">主推图 ' + (i + 1) + '</div>'
+      + '<div class="hs-preview">' + (c.url ? '<img src="' + c.url + '">' : '<span style="color:#bbb;font-size:13px">暂无图片</span>') + '</div>'
+      + '<div class="form-group"><label>标签文案</label><input id="hs_tag_' + i + '" value="' + (c.tag || '').replace(/"/g, '&quot;') + '" placeholder="如 人参闪释片"></div>'
+      + '<div class="form-group"><label>图片地址</label><input id="hs_url_' + i + '" value="' + (c.url || '').replace(/"/g, '&quot;') + '" placeholder="https://... 或点击下方上传"></div>'
+      + '<input type="file" id="hs_file_' + i + '" accept="image/*" style="display:none" onchange="uploadHeroImage(' + i + ',this.files[0])">'
+      + '<button class="btn btn-primary btn-sm" onclick="document.getElementById(\'hs_file_' + i + '\').click()">📁 上传替换图片</button>'
+      + '</div>';
+  }).join('');
+}
+
+async function uploadHeroImage(i, file) {
+  if (!file || !file.type.startsWith('image/')) return;
+  toast('⏳ 正在上传主推图 ' + (i + 1) + '...', 'info');
+  try {
+    await getCos();
+    var ext = file.name.split('.').pop().toLowerCase();
+    if (['jpg','jpeg','png','webp','gif'].indexOf(ext) === -1) ext = 'jpg';
+    var key = 'images/hero_' + Date.now() + '_' + i + '_' + Math.floor(Math.random() * 100000) + '.' + ext;
+    var url = await uploadToCOS(key, file);
+    heroCards[i].url = url;
+    renderHeroSlots();
+    toast('✅ 上传成功，点击「保存主推图」后生效', 'success');
+  } catch(e) {
+    toast('❌ 上传失败: ' + e.message, 'error');
+  }
+}
+
+async function saveHeroSettings() {
+  for (var i = 0; i < 3; i++) {
+    heroCards[i].tag = document.getElementById('hs_tag_' + i).value.trim();
+    heroCards[i].url = document.getElementById('hs_url_' + i).value.trim();
+  }
+  if (!heroCards.some(function(c){ return c.url; })) {
+    toast('⚠️ 三张图都为空，请至少保留一张', 'warn');
+    return;
+  }
+  var data = {key:'hero', cards:heroCards, updatedAt:new Date().toISOString()};
+  try {
+    if (heroDocId) {
+      await callDb('update', {collection:'settings', docId:heroDocId, data:data});
+    } else {
+      await callDb('add', {collection:'settings', data:data});
+      await loadHeroSettings();
+    }
+    toast('✅ 主推图已保存，前台首页刷新后自动同步', 'success');
+  } catch(e) {
+    toast('❌ 保存失败: ' + e.message, 'error');
+  }
+}
+
+// ==================== 注册用户管理 ====================
+var allUsers = [];
+
+async function loadUsers() {
+  try {
+    var docs = await callDb('get', {collection:'users', orderBy:'createdAt', orderDirection:'desc', limit:500});
+    allUsers = docs || [];
+  } catch(e) {
+    allUsers = [];
+    toast('⚠️ 用户数据加载失败: ' + e.message, 'warn');
+  }
+  renderUsers();
+}
+
+function fmtTime(iso) {
+  if (!iso) return '-';
+  var d = new Date(iso);
+  if (isNaN(d.getTime())) return '-';
+  function p(n){ return n < 10 ? '0' + n : '' + n; }
+  return d.getFullYear() + '-' + p(d.getMonth()+1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+}
+
+function renderUsers() {
+  var tbody = document.getElementById('userTableBody');
+  document.getElementById('userCount').textContent = '（共 ' + allUsers.length + ' 人）';
+  if (!allUsers.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--text-light);padding:30px">暂无注册用户</td></tr>';
+    return;
+  }
+  tbody.innerHTML = allUsers.map(function(u) {
+    return '<tr>' +
+      '<td><b>' + esc(u.name || '-') + '</b></td>' +
+      '<td><code>' + esc(u.phone || '-') + '</code></td>' +
+      '<td>' + esc(u.company || '-') + '</td>' +
+      '<td>' + esc(u.position || '-') + '</td>' +
+      '<td>' + fmtTime(u.createdAt) + '</td>' +
+      '<td>' + fmtTime(u.lastLoginAt) + '</td>' +
+      '<td><div class="actions"><button class="btn btn-danger btn-sm" onclick="deleteUser(\'' + u._id + '\',\'' + (u.name || '').replace(/'/g, '') + '\')">删除</button></div></td>' +
+      '</tr>';
+  }).join('');
+}
+
+async function deleteUser(docId, name) {
+  if (!confirm('确定删除用户 "' + name + '" 吗？删除后该手机号可重新注册。')) return;
+  try {
+    await callDb('delete', {collection:'users', docId:docId});
+    toast('✅ 用户已删除', 'success');
+    loadUsers();
+  } catch(e) {
+    toast('❌ 删除失败: ' + e.message, 'error');
+  }
 }
 
 // ==================== 删除 ====================
