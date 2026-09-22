@@ -408,9 +408,16 @@ img{
 .pdt-slide{
   flex:0 0 100%;scroll-snap-align:start;
   display:flex;align-items:center;justify-content:center;
-  aspect-ratio:4/3;padding:18px;
+  height:min(76vw,340px);min-height:220px;
+  padding:18px;
 }
-.pdt-slide img{max-width:100%;max-height:100%;object-fit:contain;border-radius:8px}
+.pdt-slide img{
+  display:block;width:100%;height:100%;
+  object-fit:contain;border-radius:8px;
+}
+.pdt-slide.img-broken::after,.pc-cover.img-broken::after{
+  content:'🧬';font-size:44px;opacity:.3;
+}
 .pdt-body{padding:22px 20px 60px;flex:1}
 .pdt-body h3{font-size:20px;font-weight:800;letter-spacing:-.3px;line-height:1.35;margin-bottom:6px}
 .pdt-sub{font-size:13px;color:var(--ink-3);margin-bottom:16px}
@@ -1171,7 +1178,7 @@ function renderProducts(){
       var extraCls = pi >= 10 ? ' pc-extra' : '';
       html += '<div class="prod-card' + extraCls + '" id="prod-' + currentTheme + '-' + bi + '-' + pi + '" onclick="cardTap(\'' + currentTheme + '\',' + bi + ',' + pi + ')">'
         + '<div class="pc-cover">'
-        + (cover ? '<img src="' + esc(cover) + '" alt="' + esc(p.name||'') + '" loading="lazy" draggable="false">' : '<span class="noimg">🧬</span>')
+        + (cover ? '<img src="' + esc(cover) + '" alt="' + esc(p.name||'') + '" loading="lazy" draggable="false" onerror="imgFallback(this)">' : '<span class="noimg">🧬</span>')
         + (imgs.length > 1 ? '<span class="pc-count">' + imgs.length + ' 张图</span>' : '')
         + '</div><div class="pc-body">'
         + '<div class="pc-name">' + esc(p.name||'') + '</div>'
@@ -1333,6 +1340,13 @@ function searchGo(theme, bi, pi){
   }, 60);
 }
 
+/* 图片加载失败兜底：隐藏破图，占位符显示 */
+function imgFallback(img){
+  img.onerror = null;
+  img.style.display = 'none';
+  if (img.parentElement) img.parentElement.classList.add('img-broken');
+}
+
 /* ===== 产品卡点击：移动端进详情页，桌面端直接看大图 ===== */
 function cardTap(theme, bi, pi){
   if (window.innerWidth <= 640) openProductDetail(theme, bi, pi);
@@ -1359,10 +1373,10 @@ function openProductDetail(theme, bi, pi){
     + '<div class="pdt-brand">' + esc(b.name) + '</div></div>'
     + (imgs.length
         ? '<div class="pdt-gallery">' + imgs.map(function(u){
-            return '<div class="pdt-slide"><img src="' + esc(u) + '" draggable="false" onclick=\'openLightbox('
+            return '<div class="pdt-slide"><img src="' + esc(u) + '" draggable="false" onerror="imgFallback(this)" onclick=\'openLightbox('
               + JSON.stringify(escape(JSON.stringify(imgs))) + ',' + JSON.stringify(escape(b.name + ' · ' + (p.name||''))) + ')\'></div>';
           }).join('') + '</div>'
-        : '')
+        : '<div class="pdt-gallery"><div class="pdt-slide img-broken"></div></div>')
     + '<div class="pdt-body">'
     + '<h3>' + esc(p.name || '') + '</h3>'
     + (p.subtitle ? '<div class="pdt-sub">' + esc(p.subtitle) + '</div>' : '')
